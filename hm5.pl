@@ -6,17 +6,17 @@ use Getopt::Long;
 
 # TODO: 
 # do not split at each iteration (send path/file separately) --- complicated
-# do not do open each time --- not clear how
+# do not do open each time --- not clear how and possibly not suitable
+# check formatting
 
 my $usage = "Usage: ./hm5.pl --find pattern | --tree | --size <path>\nAllowed combinations: --tree --size; --find pattern --size\n";
-my $deep = 0;
-my $total = 0;
-my ($pattern, $tree, $size);
+my ($deep, $total, $pattern, $tree, $size) = (0, 0);
 GetOptions ("find=s" => \$pattern,
             "tree"   => \$tree,
             "size"  => \$size)
 or die $usage;
 die $usage unless (($pattern or $tree or $size) and (@ARGV <= 1));
+die $usage if (($tree and $pattern and $size) or ($tree and $pattern));
 
 # $path can be specified as an argument or will be current working directory
 my $path = ($ARGV[0] or $ENV{PWD});
@@ -94,8 +94,8 @@ sub size_combine {
     }
 }
 ## calling subroutines
-dir_walk( $path, \&my_tree ) if (($tree and $size) or $tree);
-dir_walk( $path, \&my_find ) if (($pattern and $size) or $pattern);
+dir_walk( $path, \&my_tree ) if ( (($tree and $size) or $tree) and !$pattern);
+dir_walk( $path, \&my_find ) if ( (($pattern and $size) or $pattern) and !$tree);
 if ($size and !$tree and !$pattern) {
     dir_walk( $path, \&my_total );
     print "Total size is $total.\n";
