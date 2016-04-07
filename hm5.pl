@@ -5,10 +5,8 @@ use warnings;
 use Getopt::Long;
 
 # TODO: 
-# more nice look of tree (files distinct from dir) --- too slow
 # do not split at each iteration (send path/file separately) --- complicated
 # do not do open each time --- not clear how
-# more nice subroutine calls
 
 my $usage = "Usage: ./hm5.pl --find pattern | --tree | --size <path>\nAllowed combinations: --tree --size; --find pattern --size\n";
 my $deep = 0;
@@ -107,17 +105,22 @@ sub size_combine {
     }
 }
 ## calling subroutines
-if ($tree and $size) {{             # tree + size
-    dir_walk( $path, \&my_tree );
-    next;            
-}} elsif ($pattern and $size) {{    # find + size 
-    dir_walk( $path, \&my_find );
-    next;
-}} elsif ($size) {                  # calculate total size
-    dir_walk( $path, \&my_total );
-    print "Total size is $total.\n";
-} elsif ($pattern) {                # find pattern
-    dir_walk( $path, \&my_find );
-} elsif ($tree) {                   # print tree;
-    dir_walk( $path, \&my_tree );
-}
+dir_walk( $path, \&my_tree ) if (($tree and $size) or $tree);
+dir_walk( $path, \&my_find ) if (($pattern and $size) or $pattern);
+dir_walk( $path, \&my_total ) if $size;
+
+
+#if ($tree and $size) {{             # tree + size
+#    dir_walk( $path, \&my_tree );
+#    next;            
+#}} elsif ($pattern and $size) {{    # find + size 
+#    dir_walk( $path, \&my_find );
+#    next;
+#}} elsif ($size) {                  # calculate total size
+#    dir_walk( $path, \&my_total );
+#    print "Total size is $total.\n";
+#} elsif ($pattern) {                # find pattern
+#    dir_walk( $path, \&my_find );
+#} elsif ($tree) {                   # print tree;
+#    dir_walk( $path, \&my_tree );
+#}
