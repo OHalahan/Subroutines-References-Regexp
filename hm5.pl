@@ -49,7 +49,7 @@ sub dir_walk {
 # subroutine for printing tree
 sub my_tree {
     # $current_size is empty string, $item is undef
-    my ($deepness, $current_size, $item) = ( $_[1], '');
+    my ($deepness, $current_size, $item) = ( $_[1], '' );
     # if this is a root then set full path
     ($deepness == 0) ? ($item = $_[0]) : ($item = ( split '/', $_[0] )[-1]);    
     # calculate size of the file or directory if $size is requested
@@ -63,8 +63,7 @@ sub my_tree {
 }
 # subroutine for matching pattern
 sub my_find {
-    my $full_path = $_[0];
-    my $current_size = '';
+    my ($full_path, $current_size) = ($_[0], '');
     # calculate the size of the file or directory if $size is requested
     if ($size) {
         my @result = &size_combine;
