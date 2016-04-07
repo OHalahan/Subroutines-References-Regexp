@@ -51,23 +51,15 @@ sub my_tree {
     # $current_size is empty string, $item is undef
     my ($deepness, $current_size, $item) = ( $_[1], '');
     # if this is a root then set full path
-    if ($deepness == 0) {
-        $item = $_[0];
-    } else {
-        $item = ( split '/', $_[0] )[-1];
-    }    
+    ($deepness == 0) ? ($item = $_[0]) : ($item = ( split '/', $_[0] )[-1]);    
     # calculate size of the file or directory if $size is requested
     if ($size) {
         my @result = &size_combine;
         $current_size = $result[0];
     }
     print "\t" for (1..$deepness);
-    if (-d $_[0]) {
-        print "|-$item $current_size\n";
-    } else {
-        print "--$item $current_size\n";   
-    }
-    
+    # "|-" for directories, "--" for files
+    (-d $_[0]) ? (print "|-$item $current_size\n") : (print "--$item $current_size\n");
 }
 # subroutine for matching pattern
 sub my_find {
@@ -93,23 +85,22 @@ sub my_total {
 sub size_combine {
     $total = 0;
     # if directory then calculate total size recursively
-    if ( $size and (-d $_[0]) ) {
+    if ( -d $_[0] ) {
         dir_walk( $_[0], \&my_total );
         my $current_size = $total;
         return "(".$current_size.")";
-    } elsif ( $size and (-f $_[0]) ) {
+    } else {
         my $current_size = -s $_[0] if defined ( -s $_[0] );
         return "(".$current_size.")";
-    } else {
-        return;
     }
 }
 ## calling subroutines
 dir_walk( $path, \&my_tree ) if (($tree and $size) or $tree);
 dir_walk( $path, \&my_find ) if (($pattern and $size) or $pattern);
-dir_walk( $path, \&my_total ) if $size;
-
-
+if ($size and !$tree and !$pattern) {
+    dir_walk( $path, \&my_total ) if $size;
+    print "Total size is $total.\n";
+}
 #if ($tree and $size) {{             # tree + size
 #    dir_walk( $path, \&my_tree );
 #    next;            
