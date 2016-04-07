@@ -98,20 +98,6 @@ sub size_combine {
 dir_walk( $path, \&my_tree ) if (($tree and $size) or $tree);
 dir_walk( $path, \&my_find ) if (($pattern and $size) or $pattern);
 if ($size and !$tree and !$pattern) {
-    dir_walk( $path, \&my_total ) if $size;
+    dir_walk( $path, \&my_total );
     print "Total size is $total.\n";
 }
-#if ($tree and $size) {{             # tree + size
-#    dir_walk( $path, \&my_tree );
-#    next;            
-#}} elsif ($pattern and $size) {{    # find + size 
-#    dir_walk( $path, \&my_find );
-#    next;
-#}} elsif ($size) {                  # calculate total size
-#    dir_walk( $path, \&my_total );
-#    print "Total size is $total.\n";
-#} elsif ($pattern) {                # find pattern
-#    dir_walk( $path, \&my_find );
-#} elsif ($tree) {                   # print tree;
-#    dir_walk( $path, \&my_tree );
-#}
