@@ -64,7 +64,12 @@ sub my_tree {
         $current_size = $result[0];
     }
     print "\t" for (1..$deepness);
-    print "|- $item $current_size\n";
+    if (-d $_[0]) {
+        print "|-$item $current_size\n";
+    } else {
+        print "--$item $current_size\n";   
+    }
+    
 }
 # subroutine for matching pattern
 sub my_find {
@@ -105,7 +110,7 @@ sub size_combine {
 if ($tree and $size) {{             # tree + size
     dir_walk( $path, \&my_tree );
     next;            
-}} elsif ($pattern and $size) {{       # find + size 
+}} elsif ($pattern and $size) {{    # find + size 
     dir_walk( $path, \&my_find );
     next;
 }} elsif ($size) {                  # calculate total size
