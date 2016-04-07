@@ -8,6 +8,8 @@ use Getopt::Long;
 # do not split at each iteration (send path/file separately) --- complicated
 # do not do open each time --- not clear how and possibly not suitable
 # check formatting
+# ./hm5.pl --find rsa --size  /home/alex_galagan/liza/
+# Use of uninitialized value $current_size in concatenation (.) or string at ./hm5.pl line 93.
 
 my $usage = "Usage: ./hm5.pl --find pattern | --tree | --size <path>\nAllowed combinations: --tree --size; --find pattern --size\n";
 my ($deep, $total, $pattern, $tree, $size) = (0, 0);
@@ -54,7 +56,7 @@ sub my_tree {
     ($deepness == 0) ? ($item = $_[0]) : ($item = ( split '/', $_[0] )[-1]);    
     # calculate size of the file or directory if $size is requested
     if ($size) {
-        my @result = &size_combine;
+        my @result = &size_combine($_[0]);
         $current_size = $result[0];
     }
     print "\t" for (1..$deepness);
@@ -66,7 +68,7 @@ sub my_find {
     my ($full_path, $current_size) = ($_[0], '');
     # calculate the size of the file or directory if $size is requested
     if ($size) {
-        my @result = &size_combine;
+        my @result = &size_combine($_[0]);
         $current_size = $result[0];
     }
     # return if it's not a file
