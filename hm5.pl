@@ -16,7 +16,7 @@ GetOptions ("find=s" => \$pattern,
             "tree"   => \$tree,
             "size"  => \$size)
 or die $usage;
-die $usage unless ($pattern or $tree or $size or @ARGV);  
+die $usage unless (($pattern or $tree or $size) and (@ARGV <= 1));
 
 # $path can be specified as an argument or will be current working directory
 my $path = ($ARGV[0] or $ENV{PWD});
