@@ -20,11 +20,11 @@ or die $usage;
 die $usage unless (($pattern or $tree or $size) and (@ARGV <= 1));
 die $usage if (($tree and $pattern and $size) or ($tree and $pattern));
 
-# $path can be specified as an argument or will be current working directory
+# $path can be specified as an argument or it will be current working directory
 my $path = ($ARGV[0] or $ENV{PWD});
 die "Couldn’t open directory $path: $!\n\n$usage" unless (opendir my $try, $path);
 
-# subroutine walks through the tree and calls passed subroutine ($code) for each file
+# subroutine walks through the tree and calls passed subroutine ($code) for each file ($top)
 sub dir_walk {
     # $dir is undef
     my ($top, $code, $dir) = @_;
@@ -91,8 +91,8 @@ sub size_combine {
         my $current_size = $total;
         return "(".$current_size.")";
     } else {
-        my $current_size = -s $_[0] if defined ( -s $_[0] );
-        return "(".$current_size.")";
+        my $current_size = -s $_[0];
+        return "(".$current_size.")" if defined ( -s $_[0] );
     }
 }
 ## calling subroutines
