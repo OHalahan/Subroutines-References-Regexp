@@ -12,3 +12,22 @@ use warnings;
 #
 # Note: you can process a previously saved on a disk html page.
 
+#local $/;
+open(my $fh, "<", "perl.html");
+#chomp(my @html_text = <$fh>);
+my ($plain_text, $tag, @words);
+
+while (<$fh>) {
+    chomp($tag = $_);
+    #disting tags (opening/closing) from plain text
+    ($plain_text = $tag) =~ s/<[^>]*>//gs;
+    my @row = split(' ', $plain_text);
+#    print "$_\n" for @row;
+    #separate words and 
+    for (@row) {
+        s/[[:punct:]]//g;
+        push(@words, $_);
+    }
+} 
+
+print "$_\n" for @words;
