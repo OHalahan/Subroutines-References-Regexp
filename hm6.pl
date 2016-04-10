@@ -12,22 +12,26 @@ use warnings;
 #
 # Note: you can process a previously saved on a disk html page.
 
-#local $/;
 open(my $fh, "<", "perl.html");
-#chomp(my @html_text = <$fh>);
-my ($plain_text, $tag, @words);
+my ($plain_text, $tag, %words);
 
 while (<$fh>) {
     chomp($tag = $_);
     #disting tags (opening/closing) from plain text
     ($plain_text = $tag) =~ s/<[^>]*>//gs;
     my @row = split(' ', $plain_text);
-#    print "$_\n" for @row;
-    #separate words and 
+    #remove punctuation; create hash: word => count
     for (@row) {
         s/[[:punct:]]//g;
-        push(@words, $_);
+        $words{$_}++ unless ($_ eq "");
     }
+
 } 
 
-print "$_\n" for @words;
+my @top_ten = (sort {$words{$b} <=> $words{$a}} keys %words)[0..9];
+
+#for (keys %words) {
+#    print "$_ - $words{$_}\n";
+#}
+
+print "$_ - $words{$_}\n" for @top_ten;
