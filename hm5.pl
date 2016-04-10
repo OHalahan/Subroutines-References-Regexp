@@ -4,13 +4,6 @@ use strict;
 use warnings;
 use Getopt::Long;
 
-# TODO: 
-# do not split at each iteration (send path/file separately) --- complicated
-# do not do open each time --- not clear how and possibly not suitable
-# check formatting
-# ./hm5.pl --find rsa --size  /home/alex_galagan/liza/
-# Use of uninitialized value $current_size in concatenation (.) or string at ./hm5.pl line 93.
-
 my $usage = "Usage: ./hm5.pl --find pattern | --tree | --size <path>\nAllowed combinations: --tree --size; --find pattern --size\n";
 my ($deep, $total, $pattern, $tree, $size) = (0, 0);
 GetOptions ("find=s" => \$pattern,
@@ -51,9 +44,9 @@ sub dir_walk {
 # subroutine for printing tree
 sub my_tree {
     # $current_size is empty string, $item is undef
-    my ($deepness, $current_size, $item) = ( $_[1], '' );
+    my ($deepness, $current_size, $item) = ($_[1], '');
     # if this is a root then set full path
-    ($deepness == 0) ? ($item = $_[0]) : ($item = ( split '/', $_[0] )[-1]);    
+    ($deepness == 0) ? ($item = $_[0]) : ($item = (split '/', $_[0])[-1]);    
     # calculate size of the file or directory if $size is requested
     if ($size) {
         my @result = &size_combine($_[0]);
@@ -75,30 +68,30 @@ sub my_find {
     return if (-d $full_path);
     # convert full path to the relative one 
     $full_path =~ s/$path/./;
-    my $result_file = (split '/', $full_path )[-1];
+    my $result_file = (split '/', $full_path)[-1];
     print "Matched: $result_file $current_size\npath: $full_path\n\n" if ($result_file =~ $pattern);
 }
 # subroutine for calculating size 
 sub my_total {
-    $total += -s $_[0] if ( -s $_[0] );
+    $total += -s $_[0] if (-s $_[0]);
 }
 # subroutine for combining tree + size; find + size
 sub size_combine {
     $total = 0;
     # if directory then calculate total size recursively
-    if ( -d $_[0] ) {
-        dir_walk( $_[0], \&my_total );
+    if (-d $_[0]) {
+        dir_walk($_[0], \&my_total);
         my $current_size = $total;
         return "(".$current_size.")";
     } else {
         my $current_size = -s $_[0];
-        return "(".$current_size.")" if defined ( -s $_[0] );
+        return "(".$current_size.")" if defined (-s $_[0]);
     }
 }
 ## calling subroutines
-dir_walk( $path, \&my_tree ) if ( (($tree and $size) or $tree) and !$pattern);
-dir_walk( $path, \&my_find ) if ( (($pattern and $size) or $pattern) and !$tree);
+dir_walk($path, \&my_tree) if ((($tree and $size) or $tree) and !$pattern);
+dir_walk($path, \&my_find) if ((($pattern and $size) or $pattern) and !$tree);
 if ($size and !$tree and !$pattern) {
-    dir_walk( $path, \&my_total );
+    dir_walk($path, \&my_total);
     print "Total size is $total.\n";
 }
