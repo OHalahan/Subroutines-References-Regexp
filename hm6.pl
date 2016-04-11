@@ -13,8 +13,16 @@ use warnings;
 #
 # Note: you can process a previously saved on a disk html page.
 
-open(my $fh, "<", "perl.html") or die "Cannot open perl.html:\n";
+open(my $fh, "<", "perl.html") or die "Cannot open perl.html: $!\n";
 my ($plain_text, $tag, %words, %tags);
+
+sub print_result {
+    my %passed_hash = %{$_[0]};
+    my ($word, $left, $right) = ($_[1], $_[2], $_[3]);
+    my @top_ten = (sort {$passed_hash{$b} <=> $passed_hash{$a}} keys %passed_hash)[0..9];
+    print "\nTop ten $word:\n";
+    print "$left$_$right - $passed_hash{$_}\n" for @top_ten;
+}
 
 while (<$fh>) {
     my @row;
@@ -22,13 +30,14 @@ while (<$fh>) {
     #disting tags (opening/closing) from plain text
     ($plain_text = $tag) =~ s/<[^>]*>//gs;
     #create hash: word => count
-    $words{lc($&)}++ while ($plain_text =~ m/\b[a-z]+\b/igs);
+    $words{lc($&)}++ while ($plain_text =~ m/\b\w+\b/igs);
     #create hash: tag => count
-    $tags{lc($&)}++ while ($tag =~ m/<[a-z]+>?/igs);
+    my @tags_durty;
+    push(@tags_durty, $&) while ($tag =~ m/<[a-z]+>?/igs);
+    for (@tags_durty) {
+        $tags{$&}++ while ($_ =~ m/[a-z]+/igs);
+    }
 } 
 
-my @top_ten_words = (sort {$words{$b} <=> $words{$a}} keys %words)[0..9];
-print "$_ - $words{$_}\n" for @top_ten_words;
-
-my @top_ten_tags = (sort {$tags{$b} <=> $tags{$a}} keys %tags)[0..9];
-print "$_ - $tags{$_}\n" for @top_ten_tags;
+print_result(\%words, "words", '"', '"');
+print_result(\%tags, "tags", "<", ">");
