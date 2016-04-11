@@ -4,14 +4,6 @@ use strict;
 use warnings;
 use Getopt::Long;
 
-<<<<<<< HEAD
-# TODO: 
-# do not split at each iteration (send path/file separately) --- complicated
-# do not do open each time --- not clear how and possibly not suitable
-# check formatting
-
-=======
->>>>>>> 3a1165f31359d8b57a416660cd4e2448c291df7a
 my $usage = "Usage: ./hm5.pl --find pattern | --tree | --size <path>\nAllowed combinations: --tree --size; --find pattern --size\n";
 my ($deep, $total, $pattern, $tree, $size) = (0, 0);
 GetOptions ("find=s" => \$pattern,
