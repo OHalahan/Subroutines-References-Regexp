@@ -15,6 +15,7 @@ use warnings;
 open(my $fh, "<", "perl.html");
 my ($plain_text, $tag, %words);
 
+#analyze file line by line and sort tags and 
 while (<$fh>) {
     chomp($tag = $_);
     #disting tags (opening/closing) from plain text
@@ -23,15 +24,15 @@ while (<$fh>) {
     #remove punctuation; create hash: word => count
     for (@row) {
         s/[[:punct:]]//g;
+        $_ = lc $_;
         $words{$_}++ unless ($_ eq "");
     }
+
+
+
 
 } 
 
 my @top_ten = (sort {$words{$b} <=> $words{$a}} keys %words)[0..9];
-
-#for (keys %words) {
-#    print "$_ - $words{$_}\n";
-#}
 
 print "$_ - $words{$_}\n" for @top_ten;
