@@ -13,26 +13,21 @@ use warnings;
 # Note: you can process a previously saved on a disk html page.
 
 open(my $fh, "<", "perl.html");
-my ($plain_text, $tag, %words);
+my ($plain_text, $tag, %words, %tags);
 
-#analyze file line by line and sort tags and 
 while (<$fh>) {
+    my @row;
     chomp($tag = $_);
     #disting tags (opening/closing) from plain text
     ($plain_text = $tag) =~ s/<[^>]*>//gs;
-    my @row = split(' ', $plain_text);
-    #remove punctuation; create hash: word => count
-    for (@row) {
-        s/[[:punct:]]//g;
-        $_ = lc $_;
-        $words{$_}++ unless ($_ eq "");
-    }
+    #create hash: word => count
+    $words{lc($&)}++ while ($plain_text =~ m/\b[a-z]+\b/igs);
 
-
-
-
+    $tags{lc($&)}++ while ($tag =~ m/<[a-z]+>?/igs);
 } 
 
-my @top_ten = (sort {$words{$b} <=> $words{$a}} keys %words)[0..9];
+my @top_ten_words = (sort {$words{$b} <=> $words{$a}} keys %words)[0..9];
+print "$_ - $words{$_}\n" for @top_ten_words;
 
-print "$_ - $words{$_}\n" for @top_ten;
+my @top_ten_tags = (sort {$tags{$b} <=> $tags{$a}} keys %tags)[0..9];
+print "$_ - $tags{$_}\n" for @top_ten_tags;
