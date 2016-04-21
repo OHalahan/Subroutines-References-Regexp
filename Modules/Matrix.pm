@@ -1,6 +1,10 @@
 package Modules::Matrix;
 
 use strict;
+use Exporter;
+
+our @ISA = ("Exporter");
+our @EXPORT = qw(&generate &min_max_avg &print_matrix);
 
 sub generate ($$$) {
     my $matrix;
