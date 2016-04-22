@@ -61,7 +61,7 @@ sub print_points_all {
 }
 
 sub check {
-    my $self = $shift;
+    my $self = shift;
     for (@obj) {
         if ((abs($self->{x} - $_->{x}) > 1) and (abs($self->{y} - $_->{y}) > 1)) {return 0;}
         elsif ($self eq $_ ) {return 0;}
@@ -69,7 +69,5 @@ sub check {
     }
 }
 
-
-
-#for (1..$count) { main->new };
-#main::print_points_all();
+for (1..$count) { main->new };
+main::print_points_all();
