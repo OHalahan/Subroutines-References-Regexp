@@ -38,6 +38,17 @@ sub print_coord_all {
     }
 }
 
+sub check {
+    my $self = shift;
+    my ($x, $y) = @_;
+
+    return 1 unless (($x < $global_x) and ($x > 0) and ($y < $global_y));
+    for (@obj) {
+        if (($x == $_->{x}) and ($y == $_->{y})) {return 1};
+    }
+    return 0;
+}
+
 sub print_points_all {
     my $matrix;
     for my $rows (0..$global_x) {
@@ -60,12 +71,12 @@ sub print_points_all {
     }
 }
 
-sub check {
+sub move {
     my $self = shift;
-    for (@obj) {
-        if ((abs($self->{x} - $_->{x}) > 1) and (abs($self->{y} - $_->{y}) > 1)) {return 0;}
-        elsif ($self eq $_ ) {return 0;}
-        else {return 1;}
+    my $dir = int rand 8;
+    my (newx, new_y);
+    given ($dir) {
+        when(0) {$new_x = $self{x}+1; $new_y = $self->{y};}
     }
 }
 
