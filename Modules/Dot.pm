@@ -1,23 +1,44 @@
 package Modules::Dot;
 
+# module for generating the DOT ang its direction
+
 use strict;
 use warnings;
 use feature "switch";
 
-my ($global_x, $global_y, $count) = (20, 40, 10);
+sub get_x {
+    my $self = shift;
+    return $self->{x};
+}
+
+sub get_y {
+    my $self = shift;
+    return $self->{y};
+}
+
+sub set_x {
+    my $self = shift;
+    $self->{x} = shift;
+}
+
+sub set_y {
+    my $self = shift;
+    $self->{y} = shift;
+}
 
 sub new {
     my $class = shift;
     my $self = {};
     bless($self, $class);
-    $self->init();
+    $self->init(@_);
     return $self;
 }
 
 sub init {
     my $self = shift;
-    $self->{x} = int rand $global_x;
-    $self->{y} = int rand $global_y;
+    my ($gl_x, $gl_y) = @_;
+    $self->{x} = int rand $gl_x;
+    $self->{y} = int rand $gl_y;
 }
 
 sub move {
