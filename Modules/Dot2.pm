@@ -7,6 +7,48 @@ use warnings;
 use feature "switch";
 use parent ("Modules::Dot");
 
+sub set_dir {
+    my $self = shift;
+    if (($self->{dir}) < 4) {
+        $self->{dir} = int rand 8;
+    } else {
+        $self->{dir} = 1;
+    }
+}
+
+sub check {
+    
+}
+
+sub init {
+    my $self = shift;
+    my ($gl_x, $gl_y, $objects, $obstacles) = @_;
+    $self->{x} = int rand $gl_x until ($self->{x} != 0);
+    $self->{y} = int rand $gl_y until ($self->{y} != 0);
+    $self->{dir} = int rand 8;
+    for (@{$objects}) {
+        if (($self->{x} == $_->get_x) and ($self->{y} == $_->get_y)) {$self->init};
+    }
+    for (@{$obstacles}) {
+        if (($self->{x} == $_->get_x) and ($self->{y} == $_->get_y)) {$self->init};
+    }    
+}
+
+sub new_obstacle {
+    my $class = shift;
+    my $self = {};
+    bless($self, $class);
+    $self->init_obstacle(@_);
+    return $self;
+}
+
+sub init_obstacle {
+    my $self = shift;
+    my ($set_x, $set_y) = @_;
+    $self->{x} = $set_x;
+    $self->{y} = $set_y;
+}
+
 sub move {
     my $self = shift;
     my $dir = $self->{dir};
@@ -22,35 +64,6 @@ sub move {
         when(7) {$new_x = $self->{x}+1; $new_y = $self->{y}-1;}
     };
     return($new_x, $new_y);
-}
-
-sub init {
-    my $self = shift;
-    my ($gl_x, $gl_y) = @_;
-    $self->{x} = int rand $gl_x;
-    $self->{y} = int rand $gl_y;
-    $self->{dir} = int rand 8;
-}
-
-sub set_dir {
-    my $self = shift;
-    $self->{dir} = int rand 8;
-}
-
-sub new_obstacle {
-    my $class = shift;
-    my $self = {};
-    bless($self, $class);
-    $self->init_obstacle(@_);
-    return $self;
-}
-
-sub init_obstacle {
-    my $self = shift;
-    my ($gl_x, $gl_y) = @_;
-    $self->{x} = $gl_x;
-    $self->{y} = $gl_y;
-    $self->{dir} = int rand 8;
 }
 
 1;

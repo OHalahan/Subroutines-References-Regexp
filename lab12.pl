@@ -12,25 +12,25 @@ use Modules::Creator2;
 # To realize the task you should create separate modules with parent (old) class and inherited (new) class descriptions.
 
 my (@obj, @obst);
-my ($global_x, $global_y, $count) = (20, 40, 10);
+my ($global_x, $global_y, $count) = (12, 20, 20);
 
-#form an array of objects
-for (1..$count) {
-    push @obj, Modules::Dot2->new($global_x, $global_y);
-}
-
-# form an array of objects on the border
+# form an array of obstacles and objects on the border
 for my $row (0..$global_x) {
     for my $elem (0..$global_y) {
         push @obst, Modules::Dot2->new_obstacle($row, $elem) if ($elem == 0 or $row == 0 or $elem == $global_y or $row == $global_x);
+        if (($elem > 5 and $elem < 15) and ($row > 2 and $row <10) ) {
+            push @obst, Modules::Dot2->new_obstacle($row, $elem);  
+        }
     }
 }
 
-
-
+#form an array of objects
+for (1..$count) {
+    push @obj, Modules::Dot2->new($global_x, $global_y, \@obj, \@obst);
+}
 
 for (;;) {
-    Modules::Creator2->move_all(\@obj, $global_x, $global_y);
-    Modules::Creator2->print_out(\@obj, $global_x, $global_y, \@obst);
-    select(undef, undef, undef, 0.1);
+    Modules::Creator2::move_all(\@obj, $global_x, $global_y, \@obst);
+    Modules::Creator2::print_out(\@obj, $global_x, $global_y, \@obst);
+    select(undef, undef, undef, 1);
 }
