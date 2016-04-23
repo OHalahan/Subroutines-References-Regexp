@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use feature "switch";
 
 # Create a table of cells and a couple of entities, which change their position from one cell to another. 
 # The positions are changed every second. During each pass the entity randomly chooses one of eight 
@@ -10,7 +11,7 @@ use warnings;
 # The table and instances should be printed to STDOUT.
 
 my @obj;
-my ($global_x, $global_y, $count) = (20, 20, 20);
+my ($global_x, $global_y, $count) = (20, 40, 40);
 
 sub new {
     my $class = shift;
@@ -74,11 +75,30 @@ sub print_points_all {
 sub move {
     my $self = shift;
     my $dir = int rand 8;
-    my (newx, new_y);
+    my ($new_x, $new_y);
     given ($dir) {
-        when(0) {$new_x = $self{x}+1; $new_y = $self->{y};}
+        when(0) {$new_x = $self->{x}+1; $new_y = $self->{y}  ;}
+        when(1) {$new_x = $self->{x}+1; $new_y = $self->{y}+1;}
+        when(2) {$new_x = $self->{x}  ; $new_y = $self->{y}+1;}
+        when(3) {$new_x = $self->{x}-1; $new_y = $self->{y}+1;}
+        when(4) {$new_x = $self->{x}-1; $new_y = $self->{y}  ;}
+        when(5) {$new_x = $self->{x}-1; $new_y = $self->{y}-1;}
+        when(6) {$new_x = $self->{x}  ; $new_y = $self->{y}-1;}
+        when(7) {$new_x = $self->{x}+1; $new_y = $self->{y}-1;}
+    };
+    unless ($self->check($new_x, $new_y)) {$self->{x} = $new_x; $self->{y} = $new_y}
+}
+
+sub move_all {
+    for (@obj) {
+        $_->move();
     }
 }
 
-for (1..$count) { main->new };
-main::print_points_all();
+for (1..40) {main->new;}
+
+for (;;) {
+    main::move_all();
+    main::print_points_all();
+    select(undef, undef, undef, 0.1);
+}
