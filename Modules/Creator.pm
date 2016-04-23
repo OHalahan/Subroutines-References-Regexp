@@ -16,6 +16,7 @@ sub check {
 }
 
 sub print_out {
+    shift;
     my ($objects, $global_x, $global_y, $matrix) = @_;
     for my $row (0..$global_x) {
         for my $elem (0..$global_y) {
@@ -35,6 +36,7 @@ sub print_out {
 }
 
 sub move_all {
+    shift;
     my $objects = shift;
     for (@{$objects}) {
         my ($new_x, $new_y) = ($_->move());
