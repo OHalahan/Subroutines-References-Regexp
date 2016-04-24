@@ -2,8 +2,7 @@
 
 use strict;
 use warnings;
-use Modules::Dot;
-use Modules::Creator;
+use Modules::Dots;
 
 # Create a table of cells and a couple of entities, which change their position from one cell to another. 
 # The positions are changed every second. During each pass the entity randomly chooses one of eight 
@@ -15,11 +14,11 @@ my @obj;
 my ($global_x, $global_y, $count) = (20, 40, 10);
 
 for (1..$count) {
-    push @obj, Modules::Dot->new($global_x, $global_y);
+    push @obj, Modules::Dots->new($global_x, $global_y, \@obj);
 }
 
 for (;;) {
-    Modules::Creator::move_all(\@obj, $global_x, $global_y);
-    Modules::Creator::print_out(\@obj, $global_x, $global_y);
+    Modules::Dots::move_all(\@obj, $global_x, $global_y);
+    Modules::Dots::print_out(\@obj, $global_x, $global_y);
     select(undef, undef, undef, 0.1);
 }
