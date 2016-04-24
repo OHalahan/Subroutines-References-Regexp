@@ -6,6 +6,7 @@ use strict;
 use warnings;
 use feature "switch";
 use parent ("Modules::Dot");
+require Modules::Creator2;
 
 sub set_dir {
     my $self = shift;
@@ -16,22 +17,18 @@ sub set_dir {
     }
 }
 
-sub check {
-    
-}
-
 sub init {
     my $self = shift;
     my ($gl_x, $gl_y, $objects, $obstacles) = @_;
-    $self->{x} = int rand $gl_x until ($self->{x} != 0);
-    $self->{y} = int rand $gl_y until ($self->{y} != 0);
-    $self->{dir} = int rand 8;
-    for (@{$objects}) {
-        if (($self->{x} == $_->get_x) and ($self->{y} == $_->get_y)) {$self->init};
+    my ($x, $y) = (int rand $gl_x, int rand $gl_y);
+    # check that object is created not on the another object or obstacle
+    unless (Modules::Creator2::check($x, $y, $objects, $gl_x, $gl_y, $obstacles)) {
+        $self->{x} = $x;
+        $self->{y} = $y;
+        $self->{dir} = int rand 8;  
+    } else {
+        $self->init(@_);
     }
-    for (@{$obstacles}) {
-        if (($self->{x} == $_->get_x) and ($self->{y} == $_->get_y)) {$self->init};
-    }    
 }
 
 sub new_obstacle {

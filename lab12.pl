@@ -12,17 +12,25 @@ use Modules::Creator2;
 # To realize the task you should create separate modules with parent (old) class and inherited (new) class descriptions.
 
 my (@obj, @obst);
-my ($global_x, $global_y, $count) = (12, 20, 20);
+my ($global_x, $global_y, $count) = (30, 60, 10);
 
-# form an array of obstacles and objects on the border
-for my $row (0..$global_x) {
-    for my $elem (0..$global_y) {
-        push @obst, Modules::Dot2->new_obstacle($row, $elem) if ($elem == 0 or $row == 0 or $elem == $global_y or $row == $global_x);
-        if (($elem > 5 and $elem < 15) and ($row > 2 and $row <10) ) {
-            push @obst, Modules::Dot2->new_obstacle($row, $elem);  
+sub gen_obst {
+    my ($gl_x, $gl_y, $row_u, $row_d, $elem_l, $elem_r, $my_obst) = @_;
+    for my $row (0..$gl_x) {
+        for my $elem (0..$gl_y) {
+            # set border in any case
+            push @{$my_obst}, Modules::Dot2->new_obstacle($row, $elem) if ($elem == 0 or $row == 0 or $elem == $gl_y or $row == $gl_x);
+            if (($elem > $elem_l and $elem < $elem_r) and ($row > $row_u and $row < $row_d) ) {
+                push @{$my_obst}, Modules::Dot2->new_obstacle($row, $elem);  
+            }
         }
     }
 }
+
+# form an array of obstacles and objects on the border
+gen_obst($global_x, $global_y, 2, (4+(int rand 10)), 5, (6+(int rand 5)), \@obst);
+gen_obst($global_x, $global_y, 2, 7, 9, (1+(int rand 14)), \@obst);
+gen_obst($global_x, $global_y, 0, 20, 20, 23, \@obst);
 
 #form an array of objects
 for (1..$count) {
@@ -32,5 +40,5 @@ for (1..$count) {
 for (;;) {
     Modules::Creator2::move_all(\@obj, $global_x, $global_y, \@obst);
     Modules::Creator2::print_out(\@obj, $global_x, $global_y, \@obst);
-    select(undef, undef, undef, 1);
+    select(undef, undef, undef, 0.06);
 }

@@ -9,7 +9,7 @@ use parent ("Modules::Creator");
 
 sub check {
     my ($x, $y, $objects, $global_x, $global_y, $obstacles) = @_;
-    return 1 unless (($x < $global_x) and ($x > 0) and ($y < $global_y) and ($y > 0));
+    return 1 unless (($x < $global_x) and ($x > 0) and ($y < $global_y) and ($y > 0) );
     for (@{$objects}) {
         if (($x == $_->get_x) and ($y == $_->get_y)) {return 1};
     }
