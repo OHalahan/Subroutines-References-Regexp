@@ -1,11 +1,11 @@
-package Modules::Creator2;
+package Modules::Dots2;
 
-# module for printing out the passed objects and moving them around
-# rely on the rule: the object is blessed and its class has getter, setter and the "move" action
+# module with enhanced "init" action
 
 use strict;
 use warnings;
-use parent ("Modules::Creator");
+use feature "switch";
+use parent ("Modules::Dots");
 
 sub check {
     my ($x, $y, $objects, $global_x, $global_y, $obstacles) = @_;
@@ -47,10 +47,7 @@ sub print_out {
     for (@{$objects}) {
         if ($matrix->[$_->get_x][$_->get_y] eq " ") {
             $matrix->[$_->get_x][$_->get_y] = "X";    
-        } else {
-            $matrix->[$_->get_x][$_->get_y] = "Y";
-        }
-        
+        }         
     }
 
     print "\033[2J";
@@ -60,6 +57,47 @@ sub print_out {
         }
         print "\n";
     }
+}
+
+sub set_dir {
+    my $self = shift;
+    if (($self->{dir}) < 4) {
+        $self->{dir} = int rand 8;
+    } else {
+        $self->{dir} = 1;
+    }
+}
+
+sub new_obstacle {
+    my $class = shift;
+    my $self = {};
+    bless($self, $class);
+    $self->init_obstacle(@_);
+    return $self;
+}
+
+sub init_obstacle {
+    my $self = shift;
+    my ($set_x, $set_y) = @_;
+    $self->{x} = $set_x;
+    $self->{y} = $set_y;
+}
+
+sub move {
+    my $self = shift;
+    my $dir = $self->{dir};
+    my ($new_x, $new_y);
+    given ($dir) {
+        when(0) {$new_x = $self->{x}+1; $new_y = $self->{y}  ;}
+        when(1) {$new_x = $self->{x}+1; $new_y = $self->{y}+1;}
+        when(2) {$new_x = $self->{x}  ; $new_y = $self->{y}+1;}
+        when(3) {$new_x = $self->{x}-1; $new_y = $self->{y}+1;}
+        when(4) {$new_x = $self->{x}-1; $new_y = $self->{y}  ;}
+        when(5) {$new_x = $self->{x}-1; $new_y = $self->{y}-1;}
+        when(6) {$new_x = $self->{x}  ; $new_y = $self->{y}-1;}
+        when(7) {$new_x = $self->{x}+1; $new_y = $self->{y}-1;}
+    };
+    return($new_x, $new_y);
 }
 
 1;
