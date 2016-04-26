@@ -3,11 +3,13 @@
 use strict;
 use warnings;
 
-my $dict = "/etc/dictionaries-common/words";
-my %full_dict;
-my $count = 1;
+my $dict      = "/etc/dictionaries-common/words";
+my %full_dict ;
+my $count     = 1;
 
-open (my $fh, "<", $dict) or die "Cannot open a file $dict\n";
+open ( my $fh, "<", $dict ) or die "Cannot open a file $dict\n";
+print "Enter the word for search:\nNote: the search is case insensitive\n\n";
+
 while (<$fh>) {
     chomp;
     $full_dict{$_} = $count++;
