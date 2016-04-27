@@ -16,13 +16,13 @@ while (<>) {
         chomp;
         $count++;
         if ( lc eq $word ) {
-            print "Found $_ at line $count\n";    
+            print "Found $_ at line $count\n";
             $found++;
             last;
         }
     }
     if (!$found) {
-        print "No matches found!\n";    
+        print "No matches found!\n";
     }
     print "\nTry again:\n";
-} 
+}
