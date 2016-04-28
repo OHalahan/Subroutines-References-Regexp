@@ -12,3 +12,8 @@ while (<$file>) {
     chomp;
     $count++ unless (length($_) < 15);
 }
+<<<<<<< HEAD
+=======
+
+e
+>>>>>>> b92b1fba294e0c89ace5906c7175fdd9a7b4c3d0
