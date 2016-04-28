@@ -12,4 +12,5 @@ while (<$file>) {
     chomp;
     $count++ unless (length($_) < 15);
 }
-print "$count\n";
+
+e
