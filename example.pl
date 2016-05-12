@@ -155,7 +155,7 @@ sub save_db {
     elsif ( -e $args->{fname} ) {
         print "File $args->{fname} exists!\n";
     }
-    elsif ( open( my $fh, ">", $args->{fname} ) ) {        
+    elsif ( open( my $fh, ">", $args->{fname} ) ) {
         for my $uid ( keys (%{$args->{store}}) ) {
             print $fh ("\nTitle: " . $args->{store}{$uid}{title}
                 . "\nAuthor: " . $args->{store}{$uid}{author}
