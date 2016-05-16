@@ -12,16 +12,16 @@ if ( !@ARGV ) {
 }
 GetOptions ( "find=s" => \$pattern, "tree" => \$tree, "size" => \$size ) or die $usage;
 
-if ( ( !$pattern or !$tree or !$size ) and ( @ARGV > 1 )  ) {
+if ( ( !$pattern || !$tree || !$size ) && ( @ARGV > 1 )  ) {
     die $usage;
 }
 
-if ( ( $tree and $pattern and $size ) or ( $tree and $pattern ) ) {
+if ( ( $tree && $pattern && $size ) || ( $tree && $pattern ) ) {
     die $usage;
 }
 
 # $path can be specified as an argument or it will be current working directory
-my $path = ( $ARGV[0] or $ENV{PWD} );
+my $path = ( $ARGV[0] || $ENV{PWD} );
 if ( !opendir my $try, $path ) {
     die "Couldn’t open directory $path: $!\n\n$usage";
 }
@@ -79,13 +79,13 @@ sub my_find {
         $current_size = $result[0];
     }
     # return if it's not a file
-    if (-d $full_path) {
+    if ( -d $full_path ) {
         return;
     }
     # convert full path to the relative one
     $full_path =~ s/$path/./;
     my $result_file = ( split '/', $full_path )[-1];
-    if ($result_file =~ $pattern) {
+    if ( $result_file =~ $pattern ) {
         print "Matched: $result_file $current_size\npath: $full_path\n\n";
     }
 }
@@ -114,11 +114,11 @@ sub size_combine {
 }
 
 ## calling subroutines
-if ( ( ( $tree and $size ) or $tree ) and !$pattern ) {
-    dir_walk( $path, \&my_tree );
-} elsif ( ( ( $pattern and $size ) or $pattern ) and !$tree ) {
-    dir_walk( $path, \&my_find );
-} elsif ( $size and !$tree and !$pattern ) {
-    dir_walk( $path, \&my_total );
+if ( ( ( $tree && $size ) || $tree ) && !$pattern ) {
+    dir_walk ( $path, \&my_tree );
+} elsif ( ( ( $pattern && $size ) || $pattern ) && !$tree ) {
+    dir_walk ( $path, \&my_find );
+} elsif ( $size && !$tree && !$pattern ) {
+    dir_walk ( $path, \&my_total );
     print "Total size is $total.\n";
 }
