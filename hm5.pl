@@ -4,6 +4,16 @@ use strict;
 use warnings;
 use Getopt::Long;
 
+# Write a script which traverse the file tree reqursively and can
+# print out them in tree format (like does 'tree' program in Ubuntu )
+# sum up size of each file and print out the total size of encountered files
+# find file and files by the given pattern and ouptut a relative path starting
+# from CWD (current working directory) for each found file ( Would be nice if pattern supports reqular expresison )
+# … whatever else that come to you mind.
+# NOTE: The sub walking tree function should be requirsive, and should be able to get
+# another handler file as parameter. use Getopt::Long module to parse command line option
+# ./fs_walker --find pattern | --print-tree | --size
+
 my $usage = "Usage: ./hm5.pl --find pattern | --tree | --size <path>\nAllowed combinations: --tree --size; --find pattern --size\n";
 my ( $deep, $total, $pattern, $tree, $size ) = ( 0, 0 );
 
