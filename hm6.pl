@@ -28,9 +28,9 @@ while ( <$fh> ) {
     #disting tags (opening/closing) from plain text
     ( $plain_text = $tag ) =~ s/<[^>]*>//gs;
     #create hash: word => count
-    $words{ lc ( $& ) }++ while ( $plain_text =~ m/\b\w+\b/igs );
+    $words{ lc ($&) }++ while ( $plain_text =~ m/\b\w+\b/igs );
     #create hash: tag => count
-    $tags{ $1 }++ while ( $tag =~ m/<([a-z]+)>?/igs );
+    $tags{$1}++ while ( $tag =~ m/<([a-z]+)>?/igs );
 }
 
 print_result ( \%words, "words", '"', '"' );
