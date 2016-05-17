@@ -29,3 +29,16 @@ use warnings;
 # NOTES:
 # Use closures for implementing iterators of found books. Use "event driven" paradigm while implementing this application.
 # You may implement other action, which your program could support.
+
+sub greeting {
+    print "Enter the required action and press ENTER:\n";
+}
+
+sub load_database {
+    
+}
+
+for ( greeting; <STDIN>; greeting ) {
+    chomp;
+    print "$_\n";
+}
