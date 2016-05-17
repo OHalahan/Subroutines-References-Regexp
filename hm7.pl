@@ -35,10 +35,20 @@ sub greeting {
 }
 
 sub load_database {
-
+    print "Enter the path to the file: ";
+    chomp ( my $file = <STDIN> );
+    open ( my $database, "<", $file ) or die "Cannot open a file $file: $!\n";
+    while ( <$database> ) {
+        my ( $title, $author, $section, $shelf, $taken )
+        if ( /^Title/ ) {
+            s/^Title:\s//;
+            $title = $_;
+        }
+        my $title = s/^Title:\s//;
+    }
 }
 
 for ( greeting; <STDIN>; greeting ) {
     chomp;
-    
+    load_database;
 }
