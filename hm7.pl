@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+#use Keeper;
 
 # A small library's database is stored in a file books.txt .
 #
@@ -30,8 +31,10 @@ use warnings;
 # Use closures for implementing iterators of found books. Use "event driven" paradigm while implementing this application.
 # You may implement other action, which your program could support.
 
+my @books = ();
+
 sub greeting {
-    print "Enter the required action and press ENTER:\n";
+    print "\nEnter the required action and press ENTER:\n";
 }
 
 sub load_database {
@@ -39,7 +42,8 @@ sub load_database {
     #chomp ( my $file = <STDIN> );
     my $file = 'books.txt';
     open ( my $database, "<", $file ) or die "Cannot open a file $file: $!\n";
-    my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
+    @books = ();
+    my ( $title, $author, $section, $shelf, $taken, @books ) = ( '', '', '', '', '' );
     while ( <$database> ) {
         chomp;
         if ( /^Title/ ) {
@@ -53,16 +57,18 @@ sub load_database {
         } elsif ( /^On Hands/ ) {
             $taken = s/^On Hands:\s//r;
         } elsif ( /^$/ && $title && $author ) {
+            #push @books, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+            push @books, $author;
             my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
-            
         } else {
-            print "Could not load the file\n";
+            print "Loaded ". @books ."books.\nThe file seems to be corrupted starting from $. row\n";
             close $database;
             return;
         }
     }
-    print "Done. Proceeded @ books in total\n";
+    print "\nDone.\nLoaded ". @books ." books in total\n";
     close $database;
+    return;
 }
 
 for ( greeting; <STDIN>; greeting ) {
