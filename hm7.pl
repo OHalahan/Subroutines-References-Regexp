@@ -36,9 +36,10 @@ sub greeting {
 
 sub load_database {
     print "Enter the path to the file: ";
-    chomp ( my $file = <STDIN> );
-    open ( my $database, "<", $file ) or print "Cannot open a file $file: $!\n";
-    my ( $title, $author, $section, $shelf, $taken );
+    #chomp ( my $file = <STDIN> );
+    my $file = 'books.txt';
+    open ( my $database, "<", $file ) or die "Cannot open a file $file: $!\n";
+    my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
     while ( <$database> ) {
         chomp;
         if ( /^Title/ ) {
@@ -52,9 +53,15 @@ sub load_database {
         } elsif ( /^On Hands/ ) {
             $taken = s/^On Hands:\s//r;
         } elsif ( /^$/ && $title && $author ) {
-            print "Done row $.\n";
+            my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
+            
+        } else {
+            print "Could not load the file\n";
+            close $database;
+            return;
         }
     }
+    print "Done. Proceeded @ books in total\n";
     close $database;
 }
 
