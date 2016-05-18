@@ -35,10 +35,30 @@ sub greeting {
 }
 
 sub load_database {
-    
+    print "Enter the path to the file: ";
+    chomp ( my $file = <STDIN> );
+    open ( my $database, "<", $file ) or print "Cannot open a file $file: $!\n";
+    my ( $title, $author, $section, $shelf, $taken );
+    while ( <$database> ) {
+        chomp;
+        if ( /^Title/ ) {
+            $title = s/^Title:\s//r;
+        } elsif ( /^Author/ ) {
+            $author = s/^Author:\s//r;
+        } elsif ( /^Section/ ) {
+            $section = s/^Section:\s//r;
+        } elsif ( /^Shelf/ ) {
+            $shelf = s/^Shelf:\s//r;
+        } elsif ( /^On Hands/ ) {
+            $taken = s/^On Hands:\s//r;
+        } elsif ( /^$/ && $title && $author ) {
+            print "Done row $.\n";
+        }
+    }
+    close $database;
 }
 
 for ( greeting; <STDIN>; greeting ) {
     chomp;
-    print "$_\n";
+    load_database;
 }
