@@ -4,7 +4,6 @@ Section: Java
 Shelf: 1
 On Hands: 
 
-
 Title: Microsoft Word - apache3.doc
 Author: Eric Robert
 Section: Windows

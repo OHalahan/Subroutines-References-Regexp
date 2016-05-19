@@ -36,7 +36,7 @@ sub greeting {
 }
 
 sub load_database {
-    my $book_db = $_[0];
+    my ( $book_db, $id )  = ( $_[0], 0 );
     @{ $book_db } = ();
     print "Enter the path to the file: ";
     #chomp ( my $file = <STDIN> );
@@ -59,6 +59,7 @@ sub load_database {
             } elsif ( /^On Hands/ ) {
                 $taken = s/^On Hands:\s//r;
             } elsif ( /^$/ && $title && $author ) {
+                $id++;
                 #push @books, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
                 push @{ $book_db }, $author;
                 my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
@@ -68,7 +69,7 @@ sub load_database {
                 return;
             }
         }
-        print "\nDone.\nLoaded ". @{ $book_db } ." books in total\n";
+        print "\nDone.$id\nLoaded ". @{ $book_db } ." books in total\n";
         close $database;
         return;
     }
