@@ -31,47 +31,51 @@ use warnings;
 # Use closures for implementing iterators of found books. Use "event driven" paradigm while implementing this application.
 # You may implement other action, which your program could support.
 
-my @books = ();
-
 sub greeting {
     print "\nEnter the required action and press ENTER:\n";
 }
 
 sub load_database {
+    my $book_db = $_[0];
+    @{ $book_db } = ();
     print "Enter the path to the file: ";
     #chomp ( my $file = <STDIN> );
     my $file = 'books.txt';
-    open ( my $database, "<", $file ) or die "Cannot open a file $file: $!\n";
-    @books = ();
-    my ( $title, $author, $section, $shelf, $taken, @books ) = ( '', '', '', '', '' );
-    while ( <$database> ) {
-        chomp;
-        if ( /^Title/ ) {
-            $title = s/^Title:\s//r;
-        } elsif ( /^Author/ ) {
-            $author = s/^Author:\s//r;
-        } elsif ( /^Section/ ) {
-            $section = s/^Section:\s//r;
-        } elsif ( /^Shelf/ ) {
-            $shelf = s/^Shelf:\s//r;
-        } elsif ( /^On Hands/ ) {
-            $taken = s/^On Hands:\s//r;
-        } elsif ( /^$/ && $title && $author ) {
-            #push @books, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-            push @books, $author;
-            my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
-        } else {
-            print "Loaded ". @books ."books.\nThe file seems to be corrupted starting from $. row\n";
-            close $database;
-            return;
+    if ( ! open ( my $database, '<', $file ) ) {
+        warn "Cannot open a file $file: $!\n";
+        return;
+    } else {
+        my ( $title, $author, $section, $shelf, $taken, @books ) = ( '', '', '', '', '' );
+        while ( <$database> ) {
+            chomp;
+            if ( /^Title/ ) {
+                $title = s/^Title:\s//r;
+            } elsif ( /^Author/ ) {
+                $author = s/^Author:\s//r;
+            } elsif ( /^Section/ ) {
+                $section = s/^Section:\s//r;
+            } elsif ( /^Shelf/ ) {
+                $shelf = s/^Shelf:\s//r;
+            } elsif ( /^On Hands/ ) {
+                $taken = s/^On Hands:\s//r;
+            } elsif ( /^$/ && $title && $author ) {
+                #push @books, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+                push @{ $book_db }, $author;
+                my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
+            } else {
+                print "Loaded ". @{ $book_db } ." books.\nThe file seems to be corrupted starting from $. row\n";
+                close $database;
+                return;
+            }
         }
+        print "\nDone.\nLoaded ". @{ $book_db } ." books in total\n";
+        close $database;
+        return;
     }
-    print "\nDone.\nLoaded ". @books ." books in total\n";
-    close $database;
-    return;
 }
 
+my @books = ();
 for ( greeting; <STDIN>; greeting ) {
     chomp;
-    load_database;
+    load_database( \@books );
 }
