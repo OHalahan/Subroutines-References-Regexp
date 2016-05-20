@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-#use Keeper;
+use Keeper;
 
 # A small library's database is stored in a file books.txt .
 #
@@ -60,8 +60,8 @@ sub load_database {
                 $taken = s/^On Hands:\s//r;
             } elsif ( /^$/ && $title && $author ) {
                 $id++;
-                #push @books, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-                push @{ $book_db }, $author;
+                push @books, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+                #push @{ $book_db }, $author;
                 my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
             } else {
                 print "Loaded ". @{ $book_db } ." books.\nThe file seems to be corrupted starting from $. row\n";
