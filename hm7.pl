@@ -48,6 +48,7 @@ sub load_database {
         my ( $title, $author, $section, $shelf, $taken, @books ) = ( '', '', '', '', '' );
         while ( <$database> ) {
             chomp;
+            print "Joined $_\n";
             if ( /^Title/ ) {
                 $title = s/^Title:\s//r;
             } elsif ( /^Author/ ) {
@@ -58,9 +59,10 @@ sub load_database {
                 $shelf = s/^Shelf:\s//r;
             } elsif ( /^On Hands/ ) {
                 $taken = s/^On Hands:\s//r;
-            } elsif ( /^$/ && $title && $author ) {
+            } elsif ( /^$/ && $author && $title ) {
                 $id++;
-                push @books, Keeper->new( { title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken } );
+                print "here it is $_";
+                push @{ $book_db }, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
                 #push @{ $book_db }, $author;
                 my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
             } else {
@@ -79,4 +81,12 @@ my @books = ();
 for ( greeting; <STDIN>; greeting ) {
     chomp;
     load_database( \@books );
+}
+
+for my $book (@books) {
+    #for my $values ( keys %{$book} ) {
+    #    print "$values: ${$book}{$values}\n";
+    #}
+    print "${$book}{title}\n";
+    print "${$book}{taken}\n\n";
 }
