@@ -16,7 +16,7 @@ chomp(@uploading_data);
 
 $existing_hash{$_} = "0" for @existing_data;
 
-# form hash of anonymous hashes from import.csv 
+# form hash of anonymous hashes from import.csv
 for (@uploading_data) {
     my @line = split(',', $_);
     my $code = $line[1];
@@ -26,7 +26,7 @@ for (@uploading_data) {
     $uploading_hash{$prefix}{$code} = $country;
 }
 
-# print out if there is no such prefix in DB 
+# print out if there is no such prefix in DB
 for my $prefixes ( keys %uploading_hash ) {
     if ( defined ($existing_hash{$prefixes})) {
         next;
