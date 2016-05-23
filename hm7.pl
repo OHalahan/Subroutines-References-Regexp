@@ -32,12 +32,13 @@ use Keeper;
 # You may implement other action, which your program could support.
 
 sub greeting {
+    print "\nPossible actions:\nl\tload\na\tadd book\nd\tdelete book\ns\tsearch book\n";
     print "\nEnter the required action and press ENTER:\n";
 }
 
 sub load_database {
     my ( $book_db, $id )  = ( $_[0], 0 );
-    @{ $book_db } = ();
+    undef %{ $book_db };
     print "Enter the path to the file: ";
     #chomp ( my $file = <STDIN> );
     my $file = 'books.txt';
@@ -48,7 +49,6 @@ sub load_database {
         my ( $title, $author, $section, $shelf, $taken, @books ) = ( '', '', '', '', '' );
         while ( <$database> ) {
             chomp;
-            print "Joined $_\n";
             if ( /^Title/ ) {
                 $title = s/^Title:\s//r;
             } elsif ( /^Author/ ) {
@@ -59,34 +59,30 @@ sub load_database {
                 $shelf = s/^Shelf:\s//r;
             } elsif ( /^On Hands/ ) {
                 $taken = s/^On Hands:\s//r;
-            } elsif ( /^$/ && $author && $title ) {
+            } elsif ( /^$/ && $title && $author ) {
                 $id++;
-                print "here it is $_";
-                push @{ $book_db }, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-                #push @{ $book_db }, $author;
-                my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
-            } else {
-                print "Loaded ". @{ $book_db } ." books.\nThe file seems to be corrupted starting from $. row\n";
-                close $database;
-                return;
+                ${$book_db}{$id} = Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+                ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
             }
         }
-        print "\nDone.$id\nLoaded ". @{ $book_db } ." books in total\n";
+        print "\nDone.\nLoaded $id books in total\n";
         close $database;
         return;
     }
 }
 
-my @books = ();
-for ( greeting; <STDIN>; greeting ) {
-    chomp;
-    load_database( \@books );
+sub add_book {
+    my ($book_db) = @_;
+    my $id = (sort { ${$book_db}{$a} <=> ${$book_db}{$b} } keys %{$book_db})[0] + 1;
+    for (sort { ${$book_db}{$a} <=> ${$book_db}{$b} } keys %{$book_db}) {
+        print "$_ - ${$book_db}{$_}{title}\n";
+    }
+
 }
 
-for my $book (@books) {
-    #for my $values ( keys %{$book} ) {
-    #    print "$values: ${$book}{$values}\n";
-    #}
-    print "${$book}{title}\n";
-    print "${$book}{taken}\n\n";
+my %books;
+for ( greeting; <STDIN>; greeting ) {
+    chomp;
+    load_database( \%books );
+    add_book( \%books );
 }
