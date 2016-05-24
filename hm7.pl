@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Keeper;
+use Database;
 
 # A small library's database is stored in a file books.txt .
 #
@@ -40,6 +40,8 @@ sub load_database {
     my ( $book_db )  = @_;
     @{ $book_db } = ();
     print "Enter the path to the file: ";
+    my $database_obj = Database->new();
+    print "$database_obj\n";
     #chomp ( my $file = <STDIN> );
     my $file = 'books.txt';
     if ( ! open ( my $database, '<', $file ) ) {
@@ -60,7 +62,7 @@ sub load_database {
             } elsif ( /^On Hands/ ) {
                 $taken = s/^On Hands:\s//r;
             } elsif ( /^$/ && $title && $author ) {
-                push @{$book_db}, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+                #push @{$book_db}, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
                 ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
             }
         }
@@ -72,8 +74,18 @@ sub load_database {
 
 sub add_book {
     my ( $title, $author, $section, $shelf, $taken, $book_db ) = ( '', '', '', '', '', @_ );
-    #add section with requests
-    push @{$book_db}, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+    print "\n\nEnter the book title: ";
+    chomp ($title = <STDIN>);
+    print "Enter the book's author: ";
+    chomp ($author = <STDIN>);
+    print "Enter a section: ";
+    chomp ($section = <STDIN>);
+    print "Enter a shelf: ";
+    chomp ($shelf = <STDIN>);
+    print "Enter name of the person whom this book was given to: ";
+    chomp ($taken = <STDIN>);
+    #push @{$book_db}, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+    print "Book with id has been added to the database\n";
 }
 
 sub print_book {
@@ -92,6 +104,6 @@ my @books;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
     load_database( \@books );
-    add_book( \@books );
-    print_book( \@books );
+    #add_book( \@books );
+    #print_book( \@books );
 }
