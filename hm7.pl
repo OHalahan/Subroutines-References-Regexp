@@ -77,9 +77,10 @@ sub add_book {
 }
 
 sub print_book {
-    my ( $book_db )  = @_;
-    for (@{ $book_db }) {
-        print"$_\n";
+    my ( $book_db ) = @_;
+    for ( @{ $book_db } ) {
+        my $title = $_->get_author;
+        print "$title\n";
     }
 }
 
