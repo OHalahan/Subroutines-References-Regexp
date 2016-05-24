@@ -37,8 +37,8 @@ sub greeting {
 }
 
 sub load_database {
-    my ( $book_db, $id )  = ( $_[0], 0 );
-    undef %{ $book_db };
+    my ( $book_db )  = @_;
+    @{ $book_db } = ();
     print "Enter the path to the file: ";
     #chomp ( my $file = <STDIN> );
     my $file = 'books.txt';
@@ -60,29 +60,37 @@ sub load_database {
             } elsif ( /^On Hands/ ) {
                 $taken = s/^On Hands:\s//r;
             } elsif ( /^$/ && $title && $author ) {
-                $id++;
-                ${$book_db}{$id} = Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+                push @{$book_db}, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
                 ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
             }
         }
-        print "\nDone.\nLoaded $id books in total\n";
+        print "\nDone.\nLoaded ". @{$book_db} ." books in total\n";
         close $database;
         return;
     }
 }
 
 sub add_book {
-    my ($book_db) = @_;
-    my $id = (sort { ${$book_db}{$a} <=> ${$book_db}{$b} } keys %{$book_db})[0] + 1;
-    for (sort { ${$book_db}{$a} <=> ${$book_db}{$b} } keys %{$book_db}) {
-        print "$_ - ${$book_db}{$_}{title}\n";
+    my ( $title, $author, $section, $shelf, $taken, $book_db ) = ( '', '', '', '', '', @_ );
+    #add section with requests
+    push @{$book_db}, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+}
+
+sub print_book {
+    my ( $book_db )  = @_;
+    for (@{ $book_db }) {
+        print"$_\n";
     }
+}
+
+sub search_book {
 
 }
 
-my %books;
+my @books;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
-    load_database( \%books );
-    add_book( \%books );
+    load_database( \@books );
+    add_book( \@books );
+    print_book( \@books );
 }
