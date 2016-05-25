@@ -37,38 +37,17 @@ sub greeting {
 }
 
 sub load_database {
-    my ( $book_db )  = @_;
-    @{ $book_db } = ();
     print "Enter the path to the file: ";
-    my $database_obj = Database->new();
-    print "$database_obj\n";
+    my $database     = Database->new();
     #chomp ( my $file = <STDIN> );
-    my $file = 'books.txt';
-    if ( ! open ( my $database, '<', $file ) ) {
-        warn "Cannot open a file $file: $!\n";
+    my $file         = 'books.txt';
+    $database->load_db($file);
+    if ( $@ ) {
+        print  "\n$@\n";
         return;
     } else {
-        my ( $title, $author, $section, $shelf, $taken, @books ) = ( '', '', '', '', '' );
-        while ( <$database> ) {
-            chomp;
-            if ( /^Title/ ) {
-                $title = s/^Title:\s//r;
-            } elsif ( /^Author/ ) {
-                $author = s/^Author:\s//r;
-            } elsif ( /^Section/ ) {
-                $section = s/^Section:\s//r;
-            } elsif ( /^Shelf/ ) {
-                $shelf = s/^Shelf:\s//r;
-            } elsif ( /^On Hands/ ) {
-                $taken = s/^On Hands:\s//r;
-            } elsif ( /^$/ && $title && $author ) {
-                #push @{$book_db}, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-                ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
-            }
-        }
-        print "\nDone.\nLoaded ". @{$book_db} ." books in total\n";
-        close $database;
-        return;
+        print "\nDone. Loaded ". @{ $database->{books} } ." books in total\n";
+        return $database;
     }
 }
 
@@ -84,15 +63,23 @@ sub add_book {
     chomp ($shelf = <STDIN>);
     print "Enter name of the person whom this book was given to: ";
     chomp ($taken = <STDIN>);
-    #push @{$book_db}, Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-    print "Book with id has been added to the database\n";
+    $book_db->add_book( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+    print "Book has been added to the database\n".  @{ $book_db->{books} } ." books in total\n";
 }
 
 sub print_book {
     my ( $book_db ) = @_;
-    for ( @{ $book_db } ) {
-        my $title = $_->get_author;
-        print "$title\n";
+    for my $id ( 0 .. @{ $book_db->{books} } ) {
+        my $book = @{ $book_db->{books} }[$id];
+        print "\n";
+        print "$book\n";
+        print "ID: $id\n";
+        print "Title: ${$book}{title}\n";
+        print "Author: ${$book}{author}\n";
+        print "Section: ${$book}{section}\n";
+        print "Shelf: ${$book}{shelf}\n";
+        print "On Hands: ${$book}{taken}\n";
+        print "\n";
     }
 }
 
@@ -100,10 +87,10 @@ sub search_book {
 
 }
 
-my @books;
+my $database_obj;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
-    load_database( \@books );
-    #add_book( \@books );
-    #print_book( \@books );
+    $database_obj = load_database();
+    #add_book( $database_obj );
+    print_book( $database_obj );
 }
