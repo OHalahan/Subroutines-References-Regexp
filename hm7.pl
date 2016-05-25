@@ -68,12 +68,10 @@ sub add_book {
 }
 
 sub print_book {
-    my ( $book_db ) = @_;
-    for my $id ( 0 .. @{ $book_db->{books} } ) {
-        my $book = @{ $book_db->{books} }[$id];
+    my @books = @_;
+    for my $book ( @books ) {
         print "\n";
-        print "$book\n";
-        print "ID: $id\n";
+        print "ID: ${$book}{id}\n";
         print "Title: ${$book}{title}\n";
         print "Author: ${$book}{author}\n";
         print "Section: ${$book}{section}\n";
@@ -83,6 +81,10 @@ sub print_book {
     }
 }
 
+sub delete_book {
+
+}
+
 sub search_book {
 
 }
@@ -90,7 +92,8 @@ sub search_book {
 my $database_obj;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
-    $database_obj = load_database();
-    #add_book( $database_obj );
-    print_book( $database_obj );
+    $database_obj = load_database( 'books.txt' );
+#    add_book( $database_obj );
+    print_book( @{ $database_obj->{books} } );
+    delete_book( $database_obj );
 }
