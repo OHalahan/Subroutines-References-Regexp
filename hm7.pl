@@ -34,6 +34,7 @@ use Database;
 sub greeting {
     print "\nPossible actions:\nl\tload\na\tadd book\nd\tdelete book\ns\tsearch book\n";
     print "\nEnter the required action and press ENTER:\n";
+    return;
 }
 
 sub load_database {
@@ -46,7 +47,7 @@ sub load_database {
         print  "\n$@\n";
         return;
     } else {
-        print "\nDone. Loaded ". @{ $database->{books} } ." books in total\n";
+        print "\nDone. Loaded " . scalar ( keys %{ $database->{books} } ) . " books in total\n";
         return $database;
     }
 }
@@ -64,14 +65,17 @@ sub add_book {
     print "Enter name of the person whom this book was given to: ";
     chomp ($taken = <STDIN>);
     $book_db->add_book( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-    print "Book has been added to the database\n".  @{ $book_db->{books} } ." books in total\n";
+    print "Book has been added to the database\n".  scalar( keys %{ $book_db->{books} } ) ." books in total\n";
+    return;
 }
 
 sub print_book {
-    my @books = @_;
-    for my $book ( @books ) {
+    my ( $book_db ) = @_;
+    for my $id ( 0 .. @{ $book_db->{books} } ) {
+        my $book = @{ $book_db->{books} }[$id];
         print "\n";
-        print "ID: ${$book}{id}\n";
+        print "$book\n";
+        print "ID: $id\n";
         print "Title: ${$book}{title}\n";
         print "Author: ${$book}{author}\n";
         print "Section: ${$book}{section}\n";
@@ -79,21 +83,44 @@ sub print_book {
         print "On Hands: ${$book}{taken}\n";
         print "\n";
     }
-}
-
-sub delete_book {
-
+    return;
 }
 
 sub search_book {
+    my ( $strategy, $pattern, @matched, $book_db ) = ( '', '', [], @_ );
+    my $request = "\n\nEnter the search strategy:\n1 - by id\n2 - by title\n3 - by author\n4 - by section\n5 - by shelf\n6 - by person\n";
+    print $request;
+    chomp ($starategy = <STDIN>);
+    if ( $strategy == 1 ) {
 
+    }
+    elsif ( $strategy == 2 ) {
+
+    }
+    elsif ( $strategy == 3 ) {
+
+    }
+    elsif ( $strategy == 4 ) {
+
+    }
+    elsif ( $strategy == 5 ) {
+
+    }
+    elsif ( $strategy == 6 ) {
+
+    } else {
+        print "You have not entered the correct pattern";
+        search_book(@_);        
+    }
+
+    @matched = $book_db->search_book( $strategy, $pattern );
+    return;
 }
 
 my $database_obj;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
-    $database_obj = load_database( 'books.txt' );
-#    add_book( $database_obj );
-    print_book( @{ $database_obj->{books} } );
-    delete_book( $database_obj );
+    $database_obj = load_database();
+    add_book( $database_obj );
+    #print_book( $database_obj );
 }
