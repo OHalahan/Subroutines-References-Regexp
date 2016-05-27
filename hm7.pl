@@ -53,7 +53,8 @@ sub load_database {
 }
 
 sub add_book {
-    my ( $title, $author, $section, $shelf, $taken, $book_db ) = ( '', '', '', '', '', @_ );
+    my $book_db = shift;
+    my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
     print "\n\nEnter the book title: ";
     chomp ($title = <STDIN>);
     print "Enter the book's author: ";
@@ -65,55 +66,59 @@ sub add_book {
     print "Enter name of the person whom this book was given to: ";
     chomp ($taken = <STDIN>);
     $book_db->add_book( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-    print "Book has been added to the database\n".  scalar( keys %{ $book_db->{books} } ) ." books in total\n";
+    print "Book has been added to the database\n".  $book_db->get_last_id ." books in total\n";
     return;
 }
 
 sub print_book {
-    my ( $book_db ) = @_;
-    for my $id ( 0 .. @{ $book_db->{books} } ) {
-        my $book = @{ $book_db->{books} }[$id];
+    my ( $book_db, @books ) = @_;
+    for my $book ( sort { $a <=> $b } @books ) {
         print "\n";
-        print "$book\n";
-        print "ID: $id\n";
-        print "Title: ${$book}{title}\n";
-        print "Author: ${$book}{author}\n";
-        print "Section: ${$book}{section}\n";
-        print "Shelf: ${$book}{shelf}\n";
-        print "On Hands: ${$book}{taken}\n";
+        print "ID: $book\n";
+        print "Title: " . $book_db->get_books->{$book}->get_title . "\n";
+        print "Author: " . $book_db->get_books->{$book}->get_author . "\n";
+        print "Section: " . $book_db->get_books->{$book}->get_section . "\n";
+        print "Shelf: " . $book_db->get_books->{$book}->get_shelf . "\n";
+        print "On Hands: " . $book_db->get_books->{$book}->get_taken . "\n";
         print "\n";
     }
     return;
 }
 
 sub search_book {
-    my ( $strategy, $pattern, @matched, $book_db ) = ( '', '', [], @_ );
+    my $book_db = shift;
+    my ( $strategy, $pattern, @matched ) = ( '', '', [] );
     my $request = "\n\nEnter the search strategy:\n1 - by id\n2 - by title\n3 - by author\n4 - by section\n5 - by shelf\n6 - by person\n";
     print $request;
-    chomp ($starategy = <STDIN>);
+    chomp ($strategy = <STDIN>);
     if ( $strategy == 1 ) {
-
+        chomp ($pattern = <STDIN>);
+        @matched = $book_db->search_book( 'id', $pattern );
     }
     elsif ( $strategy == 2 ) {
-
+        chomp ($pattern = <STDIN>);
+        @matched = $book_db->search_book( 'title', $pattern );
     }
     elsif ( $strategy == 3 ) {
-
+        chomp ($pattern = <STDIN>);
+        @matched = $book_db->search_book( 'author', $pattern );
     }
     elsif ( $strategy == 4 ) {
-
+        chomp ($pattern = <STDIN>);
+        @matched = $book_db->search_book( 'section', $pattern );
     }
     elsif ( $strategy == 5 ) {
-
+        chomp ($pattern = <STDIN>);
+        @matched = $book_db->search_book( 'shelf', $pattern );
     }
     elsif ( $strategy == 6 ) {
-
+        chomp ($pattern = <STDIN>);
+        @matched = $book_db->search_book( 'taken', $pattern );
     } else {
         print "You have not entered the correct pattern";
-        search_book(@_);        
+        search_book($book_db);
     }
-
-    @matched = $book_db->search_book( $strategy, $pattern );
+    print_book( $book_db, @matched );
     return;
 }
 
@@ -121,6 +126,7 @@ my $database_obj;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
     $database_obj = load_database();
-    add_book( $database_obj );
+    add_book($database_obj);
     #print_book( $database_obj );
+    search_book($database_obj);
 }

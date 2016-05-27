@@ -3,7 +3,7 @@ use Keeper;
 
 sub new {
     my $class = shift;
-    my $self  = { books => {}, file => undef };
+    my $self  = { books => {}, file => undef, last_id => 0 };
     bless($self, $class);
     return $self;
 }
@@ -14,7 +14,7 @@ sub load_db {
     my $id      = 0;
     eval {
         open( my $database, '<', $file ) or die "Cannot open a file $file: $!\n";
-        $book_db->{file} = $file;
+        $book_db->set_file($file);
         my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
         while ( <$database> ) {
             chomp;
@@ -35,7 +35,8 @@ sub load_db {
             }
             elsif ( /^$/ && $title && $author ) {
                 $id++;
-                ${ $book_db->{books}{$id} } = Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+                $book_db->set_last_id($id);
+                $book_db->{books}{$id} = Keeper->new(title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
                 ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
             }
         }
@@ -46,17 +47,27 @@ sub load_db {
 
 sub add_book {
     my $book_db = shift;
-    my $id      = scalar ( keys %{ $book_db->{books} } ) + 1;
-    ${ $book_db->{books}{$id} } = Keeper->new(@_);
+    my $id      = ( $book_db->get_last_id ) + 1;
+    $book_db->set_last_id($id);
+    $book_db->{books}{$id} = Keeper->new(@_);
     return;
 }
 
 sub search_book {
-    my ( $book_db, $strategy, $pattern, @matched ) = @_;
+    my ( $book_db, $strategy, $pattern, @matched ) = ( @_, () );
     my $expression = qr/$pattern/;
-    for my $book ( keys %{ $book_db->{books} } ) {
-        if ( ${ $book_db->{books}{$book}{strategy} } =~ $expression ) {
-            print "$book\n";
+    if ( $strategy eq 'id' ) {
+        if ( $book_db->{books}{$pattern} ) {
+            push @matched, $pattern;
+        }
+    }
+    else {
+        for my $book ( keys %{ $book_db->{books} } ) {
+            my $method   = 'get_' . $strategy;
+            my $matching = $book_db->{books}{$book}->$method;
+            if ( $matching =~ $expression ) {
+                push @matched, $book;
+            }
         }
     }
     return @matched;
