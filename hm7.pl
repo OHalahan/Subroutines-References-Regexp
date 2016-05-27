@@ -72,6 +72,9 @@ sub add_book {
 
 sub print_book {
     my ( $book_db, @books ) = @_;
+    if ( !@books ) {
+        @books = keys %{ $book_db->get_books };
+    }
     for my $book ( sort { $a <=> $b } @books ) {
         print "\n";
         print "ID: $book\n";
@@ -91,42 +94,55 @@ sub search_book {
     my $request = "\n\nEnter the search strategy:\n1 - by id\n2 - by title\n3 - by author\n4 - by section\n5 - by shelf\n6 - by person\n";
     print $request;
     chomp ($strategy = <STDIN>);
+    print "\nEnter the search patter: ";
+    chomp ($pattern = <STDIN>);
     if ( $strategy == 1 ) {
-        chomp ($pattern = <STDIN>);
         @matched = $book_db->search_book( 'id', $pattern );
     }
     elsif ( $strategy == 2 ) {
-        chomp ($pattern = <STDIN>);
         @matched = $book_db->search_book( 'title', $pattern );
     }
     elsif ( $strategy == 3 ) {
-        chomp ($pattern = <STDIN>);
         @matched = $book_db->search_book( 'author', $pattern );
     }
     elsif ( $strategy == 4 ) {
-        chomp ($pattern = <STDIN>);
         @matched = $book_db->search_book( 'section', $pattern );
     }
     elsif ( $strategy == 5 ) {
-        chomp ($pattern = <STDIN>);
         @matched = $book_db->search_book( 'shelf', $pattern );
     }
     elsif ( $strategy == 6 ) {
-        chomp ($pattern = <STDIN>);
         @matched = $book_db->search_book( 'taken', $pattern );
     } else {
         print "You have not entered the correct pattern";
         search_book($book_db);
     }
     print_book( $book_db, @matched );
-    return;
+    return @matched;
 }
+
+
 
 my $database_obj;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
     $database_obj = load_database();
     add_book($database_obj);
-    #print_book( $database_obj );
+    print_book( $database_obj );
     search_book($database_obj);
 }
+
+
+=====
+# open filehandle log.txt
+open (my $LOG, '>>', 'log.txt');
+
+# select new filehandle
+select $LOG;
+
+say 'This should be logged.';
+
+# restore STDOUT
+select STDOUT;
+
+say 'This should show in the terminal';

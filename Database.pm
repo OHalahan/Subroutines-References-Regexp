@@ -11,7 +11,7 @@ sub new {
 sub load_db {
     my $book_db = shift;
     my ($file)  = @_;
-    my $id      = 0;
+    my $id      = ( $book_db->get_last_id );
     eval {
         open( my $database, '<', $file ) or die "Cannot open a file $file: $!\n";
         $book_db->set_file($file);
@@ -36,7 +36,7 @@ sub load_db {
             elsif ( /^$/ && $title && $author ) {
                 $id++;
                 $book_db->set_last_id($id);
-                $book_db->{books}{$id} = Keeper->new(title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
+                $book_db->{books}{$id} = Keeper->new( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
                 ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
             }
         }
@@ -71,6 +71,18 @@ sub search_book {
         }
     }
     return @matched;
+}
+
+sub delete_book {
+    my $book_db = shift;
+    my $book    = @_;
+    if ( $book_db->{books}{$book} ) {
+        delete $book_db->{books}{$book};
+        return;
+    }
+    else {
+        return "No book with ID $book\n";
+    }
 }
 
 our $AUTOLOAD;
