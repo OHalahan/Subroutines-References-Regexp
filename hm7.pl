@@ -46,7 +46,8 @@ sub print_help {
 }
 
 sub remind {
-        print "You have to load database first\n";
+    print "You have to load database first\n";
+    return;
 }
 
 sub load_database {
@@ -65,7 +66,7 @@ sub load_database {
         print "Note! previous changes will be lost\n\n";
         print "Your decision (Y/N): ";
         chomp( my $decision = <STDIN> );
-        while ( $decision !~  'y|Y|n|N' ) {
+        while ( $decision !~  '^(y|Y|n|N)\$' ) {
             print "\nChoose Y or N: ";
             chomp( $decision = <STDIN> );
         }
@@ -78,13 +79,13 @@ sub load_database {
     }
 
     $book_db->load_db($file);
-    if ( $@ ) {
+    if ($@) {
         print  "\n$@\n";
-        return;
     } else {
         print "\nDone. Loaded " . scalar ( keys %{$book_db->get_books} ) . " books in total\n";
         return $book_db;
     }
+    return;
 }
 
 sub add_book {
@@ -138,7 +139,7 @@ sub search_book {
     if ( !$pattern ) {
         print "\n\nEnter a search strategy:\n1 - by title\n2 - by author\n3 - by section\n4 - by shelf\n5 - by person\n";
         chomp( $strategy = <STDIN> );
-        while ( $strategy !~  '1|2|3|4|5' ) {
+        while ( $strategy !~  '^(1|2|3|4|5)\$' ) {
             print "\nChoose between 1-5: ";
             chomp( $strategy = <STDIN> );
         }
@@ -172,8 +173,8 @@ sub search_book {
     }
     else {
         print "No books found using pattern: $pattern\n";
-        return;
     }
+    return;
 }
 
 sub delete_book {
@@ -195,7 +196,7 @@ sub save_books {
     my $book_db = shift;
     print "\nWould you like to save changes? (Y/N): ";
     chomp( my $decision = <STDIN> );
-    while ( $decision !~  'y|Y|n|N' ) {
+    while ( $decision !~  '^(y|Y|n|N)\$' ) {
         print "\nChoose Y or N: ";
         chomp( $decision = <STDIN> );
     }
@@ -212,7 +213,6 @@ sub save_books {
     }
     elsif ( $decision =~ 'n|N' ) {
         print "\nOK. Returning to main menu\n";
-        return;
     }
     return;
 }
