@@ -130,7 +130,17 @@ sub print_book {
 
 sub parse_pattern {
     my $pattern = shift;
-
+    my ( $strategy, $criteria );
+    if ( $pattern =~ /^\w+\s*=\s*.+/ ) {
+        $strategy = $pattern =~ s/\s*=.*//r;
+        $criteria = $pattern =~ s/^\w+\s*=\s*//r;
+        if ( $strategy =~ /^(title|author|on_hands|shelf|section)$/ ) {
+            return $strategy, $criteria;
+        }
+    }
+    print "The pattern is incorrect.\n\n";
+    return 0;
+}
 }
 
 sub search_book {
