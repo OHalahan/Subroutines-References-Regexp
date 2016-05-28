@@ -32,7 +32,7 @@ use Database;
 # You may implement other action, which your program could support.
 
 sub greeting {
-    print "\nPossible actions:\nl\tload <file>\na\tadd book\nd\tdelete book <pattern>\nf\tfind book <pattern>\np\tprint books\ns\tsave books\nh\thelp\n";
+    print "\nPossible actions:\nl\tload <file>\na\tadd book\nd\tdelete book <pattern>\nf\tfind book <pattern>\np\tprint books\ns\tsave books\nh\thelp\ne\texit\n";
     print "\nType a required action and press ENTER: ";
     return;
 }
@@ -66,7 +66,7 @@ sub load_database {
         print "Note! previous changes will be lost\n\n";
         print "Your decision (Y/N): ";
         chomp( my $decision = <STDIN> );
-        while ( $decision !~  '^(y|Y|n|N)\$' ) {
+        while ( $decision !~ /^(y|Y|n|N)$/ ) {
             print "\nChoose Y or N: ";
             chomp( $decision = <STDIN> );
         }
@@ -128,61 +128,71 @@ sub print_book {
     return;
 }
 
+sub get_pattern {
+    my ( $strategy, $pattern );
+    print "\n\nSearch strategies:\n1 - by title\n2 - by author\n3 - by section\n4 - by shelf\n5 - by person\n";
+    print "Strategy: ";
+    chomp( $strategy = <STDIN> );
+    while ( $strategy !~ /^(1|2|3|4|5)$/ ) {
+        print "\nChoose between 1-5: ";
+        chomp( $strategy = <STDIN> );
+    }
+    if ( $strategy == 1 ) {
+        $strategy = 'title';
+    }
+    elsif ( $strategy == 2 ) {
+        $strategy = 'author';
+    }
+    elsif ( $strategy == 3 ) {
+        $strategy = 'section';
+    }
+    elsif ( $strategy == 4 ) {
+        $strategy = 'shelf';
+    }
+    elsif ( $strategy == 5 ) {
+        $strategy = 'taken';
+    }
+    print "\nEnter a search pattern: ";
+    chomp( $pattern = <STDIN> );
+    
+    return $strategy, $pattern;
+}
+
 sub parse_pattern {
-    my $pattern = shift;
-    my ( $strategy, $criteria );
-    if ( $pattern =~ /^\w+\s*=\s*.+/ ) {
-        $strategy = $pattern =~ s/\s*=.*//r;
-        $criteria = $pattern =~ s/^\w+\s*=\s*//r;
-        if ( $strategy =~ /^(title|author|on_hands|shelf|section)$/ ) {
-            return $strategy, $criteria;
+    my $row = shift;
+    my ( $strategy, $pattern );
+    if ( $row =~ /^\w+\s*=\s*.+/ ) {
+        $strategy = $row =~ s/\s*=.*//r;
+        $pattern = $row =~ s/^\w+\s*=\s*//r;
+        if ( $strategy =~ /^(title|author|reader|shelf|section)$/ ) {
+            return $strategy, $pattern;
         }
     }
-    print "The pattern is incorrect.\n\n";
-    return 0;
-}
+    return;
 }
 
 sub search_book {
-    my ( $book_db, $pattern )  = @_;
-    my ( $strategy, @matched ) = ( '', () );
+    my ( $book_db, $pattern, $strategy, @matched )  = ( @_, '', () );
     if ( !$pattern ) {
-        print "\n\nEnter a search strategy:\n1 - by title\n2 - by author\n3 - by section\n4 - by shelf\n5 - by person\n";
-        chomp( $strategy = <STDIN> );
-        while ( $strategy !~  '^(1|2|3|4|5)\$' ) {
-            print "\nChoose between 1-5: ";
-            chomp( $strategy = <STDIN> );
+        ( $strategy, $pattern ) = get_pattern;
+    }
+    else {
+        ( $strategy, $pattern ) = parse_pattern($pattern);
+    }
+    if ( $strategy && $pattern ) {
+        @matched = $book_db->search_book( $strategy, $pattern );
+        if ( @matched ) {
+            print "Found books:\n";
+            print_book( $book_db, @matched );
+            print "Found " . @matched . " books\n";
+            return @matched;
         }
-        print "\nEnter a search pattern: ";
-        chomp( $pattern = <STDIN> );
-        if ( $strategy == 1 ) {
-            $strategy = 'title';
-        }
-        elsif ( $strategy == 2 ) {
-            $strategy = 'author';
-        }
-        elsif ( $strategy == 3 ) {
-            $strategy = 'section';
-        }
-        elsif ( $strategy == 4 ) {
-            $strategy = 'shelf';
-        }
-        elsif ( $strategy == 5 ) {
-            $strategy = 'taken';
+        else {
+            print "No books found using pattern: $strategy=$pattern\n";
         }
     }
     else {
-
-    }
-
-    @matched = $book_db->search_book( $strategy, $pattern );
-    if ( @matched ) {
-        print "Found books:\n";
-        print_book( $book_db, @matched );
-        return @matched;
-    }
-    else {
-        print "No books found using pattern: $pattern\n";
+        print "Incorrect search request\n";
     }
     return;
 }
@@ -191,22 +201,44 @@ sub delete_book {
     my $book_db = shift;
     my @books_to_delete = search_book($book_db);
     if (@books_to_delete) {
-        for my $book (@books_to_delete) {
-            $book_db->delete_book($book);
+        for my $book ( sort { $a <=> $b } @books_to_delete ) {
+            print "====\n";
+            print_book( $book_db, $book );
+            print "Delete this book?\nChoose (Y)es, (N)o or (A)ll: ";
+            chomp( my $decision = <STDIN> );
+            while ( $decision !~  /^(y|Y|n|N|a|A)$/ ) {
+                print "\nChoose Y, N or A: ";
+                chomp( $decision = <STDIN> );
+            }
+            if ( $decision =~ 'y|Y' ) {
+                $book_db->delete_book($book);
+                shift @books_to_delete;
+            }
+            elsif ( $decision =~ 'n|N' ) {
+                print "\nSkipping this one\n";
+                shift @books_to_delete;
+            }
+            else {
+                for my $every_book (@books_to_delete) {
+                    $book_db->delete_book($every_book);
+                }
+                last;
+            }
         }
-        print "Matched books were processed. " . scalar ( keys %{$book_db->get_books} ) . " books left\n";
+        print "\nMatched books were processed. " . scalar ( keys %{$book_db->get_books} ) . " books left\n";
         save_books($book_db);
     }
     else {
-
+        print "Nothing to delete\n"
     }
+    return;
 }
 
 sub save_books {
     my $book_db = shift;
     print "\nWould you like to save changes? (Y/N): ";
     chomp( my $decision = <STDIN> );
-    while ( $decision !~  '^(y|Y|n|N)\$' ) {
+    while ( $decision !~  /^(y|Y|n|N)$/ ) {
         print "\nChoose Y or N: ";
         chomp( $decision = <STDIN> );
     }
@@ -227,7 +259,7 @@ sub save_books {
     return;
 }
 
-my $database_obj;
+my $database_obj = undef;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
     if ( /^l\b/ ) {
@@ -257,6 +289,10 @@ for ( greeting; <STDIN>; greeting ) {
     }
     elsif ( /^h\b/ ) {
         print_help;
+    }
+    elsif ( /^e\b/ ) {
+        print "Bye\n";
+        exit;
     }
     else {
         print "\nYou have not entered correct pattern\nTry again...\n\n";
