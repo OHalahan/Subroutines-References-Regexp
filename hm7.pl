@@ -32,23 +32,23 @@ use Database;
 # You may implement other action, which your program could support.
 
 sub greeting {
-    print "\nPossible actions:\nl\tload\na\tadd book\nd\tdelete book\ns\tsearch book\n";
-    print "\nEnter the required action and press ENTER:\n";
+    print "\nPossible actions:\nl\tload <file>\na\tadd book\nd\tdelete book\ns\tsearch book <pattern>\n";
+    print "\nEnter the required action and press ENTER: ";
     return;
 }
 
 sub load_database {
-    print "Enter the path to the file: ";
-    my $database     = Database->new();
+    print "Enter path to the file: ";
+    my $book_db     = Database->new();
     #chomp ( my $file = <STDIN> );
     my $file         = 'books.txt';
-    $database->load_db($file);
+    $book_db->load_db($file);
     if ( $@ ) {
         print  "\n$@\n";
         return;
     } else {
-        print "\nDone. Loaded " . scalar ( keys %{ $database->{books} } ) . " books in total\n";
-        return $database;
+        print "\nDone. Loaded " . scalar ( keys %{$book_db->get_books} ) . " books in total\n";
+        return $book_db;
     }
 }
 
@@ -66,7 +66,8 @@ sub add_book {
     print "Enter name of the person whom this book was given to: ";
     chomp ($taken = <STDIN>);
     $book_db->add_book( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-    print "Book has been added to the database\n".  $book_db->get_last_id ." books in total\n";
+    print "Book has been added to the database\n".  scalar ( keys %{$book_db->get_books} ) ." books in total\n";
+    save_books($book_db);
     return;
 }
 
@@ -91,58 +92,88 @@ sub print_book {
 sub search_book {
     my $book_db = shift;
     my ( $strategy, $pattern, @matched ) = ( '', '', [] );
-    my $request = "\n\nEnter the search strategy:\n1 - by id\n2 - by title\n3 - by author\n4 - by section\n5 - by shelf\n6 - by person\n";
+    my $request = "\n\nEnter the search strategy:\n1 - by title\n2 - by author\n3 - by section\n4 - by shelf\n5 - by person\n";
     print $request;
     chomp ($strategy = <STDIN>);
-    print "\nEnter the search patter: ";
+    print "\nEnter the search pattern: ";
     chomp ($pattern = <STDIN>);
     if ( $strategy == 1 ) {
-        @matched = $book_db->search_book( 'id', $pattern );
-    }
-    elsif ( $strategy == 2 ) {
         @matched = $book_db->search_book( 'title', $pattern );
     }
-    elsif ( $strategy == 3 ) {
+    elsif ( $strategy == 2 ) {
         @matched = $book_db->search_book( 'author', $pattern );
     }
-    elsif ( $strategy == 4 ) {
+    elsif ( $strategy == 3 ) {
         @matched = $book_db->search_book( 'section', $pattern );
     }
-    elsif ( $strategy == 5 ) {
+    elsif ( $strategy == 4 ) {
         @matched = $book_db->search_book( 'shelf', $pattern );
     }
-    elsif ( $strategy == 6 ) {
+    elsif ( $strategy == 5 ) {
         @matched = $book_db->search_book( 'taken', $pattern );
     } else {
         print "You have not entered the correct pattern";
         search_book($book_db);
     }
-    print_book( $book_db, @matched );
-    return @matched;
+    if ( @matched ) {
+        print "Found books:\n";
+        print_book( $book_db, @matched );
+        return @matched;
+    }
+    else {
+        print "No books found using pattern: $pattern\n";
+        return;
+    }
 }
 
+sub delete_book {
+    my $book_db = shift;
+    my @books_to_delete = search_book($book_db);
+    if (@books_to_delete) {
+        for my $book (@books_to_delete) {
+            $book_db->delete_book($book);
+        }
+    }
+    print "Matched books were deleted. " . scalar ( keys %{$book_db->get_books} ) . " books left\n";
+    save_books($book_db);
+}
 
+sub save_books {
+    my $book_db = shift;
+    print "\nWould you like to save changes?\n";
 
-my $database_obj;
+    print "Enter path to the file for saving: ";
+    chomp ( my $file = <STDIN>);
+    $book_db->save_db($file);
+    if ($@) {
+        print "$@\n";
+        return;
+    }
+    else {
+        print "\nBooks saved!\n\n";
+        return;
+    }
+}
+
+my $database_obj = undef;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
-    $database_obj = load_database();
-    add_book($database_obj);
-    print_book( $database_obj );
-    search_book($database_obj);
+    if ( /^l\b/ ) {
+        $database_obj = load_database();
+    }
+    elsif ( /^a\b/ ) {
+        add_book($database_obj);
+    }
+    elsif ( /^p\b/ ) {
+        print_book($database_obj);
+    }
+    elsif ( /^d\b/ ) {
+        delete_book($database_obj);
+    }
+    elsif ( /^s\b/ ) {
+        search_book($database_obj);
+    }
+    else {
+        print "\nYou have not entered correct pattern\n\n";
+    }
 }
-
-
-=====
-# open filehandle log.txt
-open (my $LOG, '>>', 'log.txt');
-
-# select new filehandle
-select $LOG;
-
-say 'This should be logged.';
-
-# restore STDOUT
-select STDOUT;
-
-say 'This should show in the terminal';
