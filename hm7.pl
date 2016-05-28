@@ -38,10 +38,30 @@ sub greeting {
 }
 
 sub load_database {
+    my $book_db = shift;
     print "Enter path to the file: ";
-    my $book_db     = Database->new();
     #chomp ( my $file = <STDIN> );
     my $file         = 'books.txt';
+    if ( !$book_db ) {
+        $book_db = Database->new();
+    }
+    else {
+        print "\n\nWarning! Database is not empty\n\nWould you like to reload database from scratch? (Y/N)\n";
+        print "Note! previous changes will be lost\n\n";
+        print "Your decision: ";
+        chomp( my $decision = <STDIN> );
+        if ( $decision =~ 'y|Y' ) {
+            $book_db = Database->new();
+        }
+        elsif ( $decision =~ 'n|N' ) {
+            print "\nOK. New file will append to existing one\n";
+        }
+        else {
+            print "\nChoose Y or N\n";
+            load_database($book_db);
+        }
+    }
+
     $book_db->load_db($file);
     if ( $@ ) {
         print  "\n$@\n";
@@ -54,6 +74,9 @@ sub load_database {
 
 sub add_book {
     my $book_db = shift;
+    if ( !$book_db ) {
+        $book_db = Database->new();
+    }
     my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
     print "\n\nEnter the book title: ";
     chomp ($title = <STDIN>);
@@ -63,7 +86,7 @@ sub add_book {
     chomp ($section = <STDIN>);
     print "Enter a shelf: ";
     chomp ($shelf = <STDIN>);
-    print "Enter name of the person whom this book was given to: ";
+    print "Enter name of the reader: ";
     chomp ($taken = <STDIN>);
     $book_db->add_book( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
     print "Book has been added to the database\n".  scalar ( keys %{$book_db->get_books} ) ." books in total\n";
@@ -90,31 +113,34 @@ sub print_book {
 }
 
 sub search_book {
+
     my $book_db = shift;
-    my ( $strategy, $pattern, @matched ) = ( '', '', [] );
-    my $request = "\n\nEnter the search strategy:\n1 - by title\n2 - by author\n3 - by section\n4 - by shelf\n5 - by person\n";
-    print $request;
+    my ( $strategy, $pattern, @matched ) = ( '', '', () );
+
+    print "\n\nEnter the search strategy:\n1 - by title\n2 - by author\n3 - by section\n4 - by shelf\n5 - by person\n";
     chomp ($strategy = <STDIN>);
     print "\nEnter the search pattern: ";
     chomp ($pattern = <STDIN>);
     if ( $strategy == 1 ) {
-        @matched = $book_db->search_book( 'title', $pattern );
+        $strategy = 'title';
     }
     elsif ( $strategy == 2 ) {
-        @matched = $book_db->search_book( 'author', $pattern );
+        $strategy = 'author';
     }
     elsif ( $strategy == 3 ) {
-        @matched = $book_db->search_book( 'section', $pattern );
+        $strategy = 'section';
     }
     elsif ( $strategy == 4 ) {
-        @matched = $book_db->search_book( 'shelf', $pattern );
+        $strategy = 'shelf';
     }
     elsif ( $strategy == 5 ) {
-        @matched = $book_db->search_book( 'taken', $pattern );
+        $strategy = 'taken';
     } else {
         print "You have not entered the correct pattern";
         search_book($book_db);
     }
+
+    @matched = $book_db->search_book( $strategy, $pattern );
     if ( @matched ) {
         print "Found books:\n";
         print_book( $book_db, @matched );
@@ -140,26 +166,38 @@ sub delete_book {
 
 sub save_books {
     my $book_db = shift;
-    print "\nWould you like to save changes?\n";
-
-    print "Enter path to the file for saving: ";
-    chomp ( my $file = <STDIN>);
-    $book_db->save_db($file);
-    if ($@) {
-        print "$@\n";
+    print "\nWould you like to save changes? (Y/N)\n";
+    chomp( my $decision = <STDIN> );
+    if ( $decision =~ 'y|Y' ) {
+        print "Enter path to the file for saving: ";
+        chomp ( my $file = <STDIN>);
+        $book_db->save_db($file);
+        if ($@) {
+            print "$@\n";
+            return;
+        }
+        else {
+            print "\nBooks saved!\n\n";
+            return;
+        }
+    }
+    elsif ( $decision =~ 'n|N' ) {
+        print "\nOK. Returning to main menu\n";
         return;
     }
     else {
-        print "\nBooks saved!\n\n";
-        return;
+        print "\nChoose Y or N\n";
+        save_books($book_db);
     }
+
 }
 
 my $database_obj = undef;
 for ( greeting; <STDIN>; greeting ) {
     chomp;
     if ( /^l\b/ ) {
-        $database_obj = load_database();
+        my $path = s/^\w+\s+//r;
+        $database_obj = load_database($database_obj);
     }
     elsif ( /^a\b/ ) {
         add_book($database_obj);
