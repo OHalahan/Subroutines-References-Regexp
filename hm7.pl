@@ -33,27 +33,28 @@ use Database;
 
 sub greeting {
     print "\nPossible actions:\nl\tload <file>\na\tadd book\nd\tdelete book <pattern>\nf\tfind book <pattern>\np\tprint books\ns\tsave books\nh\thelp\ne\texit\n";
-    print "\nType a required action and press ENTER: ";
+    print "\n> Type a required action and press ENTER: ";
     return;
 }
 
 sub print_help {
     print "\n============\n";
-    print "\nExamples of search patterns:\nname=Java* \nauthor='Randal Schwartz'\nreader='Jimmy Fox'\nshelf=1\nsection=XML|Python\n";
+    print "\nExamples of search patterns:\nname=Java* \nauthor=\"Randal Schwartz\"\nreader=\"Jimmy Fox\"\nshelf=1\nsection=XML|Python\n";
+    print "\nType request in double quotes for exact match\n";
     print "\nIf a pattern is not specified, you will be prompted to choose a search strategy\n";
     print "\n============\n";
     return;
 }
 
 sub remind {
-    print "You have to load database first\n";
+    print "Warning!: You have to load database first\n";
     return;
 }
 
 sub load_database {
     my ( $book_db, $file ) = @_;
     if ( !$file ) {
-        print "Enter path to the file: ";
+        print "> Enter path to the file: ";
         #chomp ( $file = <STDIN> );
         $file = 'books.txt';
     }
@@ -62,12 +63,12 @@ sub load_database {
         $book_db = Database->new();
     }
     else {
-        print "\n\nWarning! Database is not empty.\n\nWould you like to reload database from scratch?\n";
+        print "\n\nWarning!: Database is not empty.\n\nWould you like to reload database from scratch?\n";
         print "Note! previous changes will be lost\n\n";
-        print "Your decision (Y/N): ";
+        print "> Your decision (Y/N): ";
         chomp( my $decision = <STDIN> );
         while ( $decision !~ /^(y|Y|n|N)$/ ) {
-            print "\nChoose Y or N: ";
+            print "\n> Choose Y or N: ";
             chomp( $decision = <STDIN> );
         }
         if ( $decision =~ 'y|Y' ) {
@@ -82,7 +83,7 @@ sub load_database {
     if ($@) {
         print  "\n$@\n";
     } else {
-        print "\nDone. Loaded " . scalar ( keys %{$book_db->get_books} ) . " books in total\n";
+        print "\nDone. Loaded " . scalar ( keys %{$book_db->get_books} ) . " book(s) in total\n";
         return $book_db;
     }
     return;
@@ -94,20 +95,20 @@ sub add_book {
         $book_db = Database->new();
     }
     my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
-    print "\n\nEnter the book title: ";
+    print "\n\n> Enter the book title: ";
     chomp( $title = <STDIN> );
-    print "Enter the book's author: ";
+    print "> Enter the book's author: ";
     chomp( $author = <STDIN> );
-    print "Enter a section: ";
+    print "> Enter a section: ";
     chomp( $section = <STDIN> );
-    print "Enter a shelf: ";
+    print "> Enter a shelf: ";
     chomp( $shelf = <STDIN> );
-    print "Enter name of the reader: ";
+    print "> Enter name of the reader: ";
     chomp( $taken = <STDIN> );
     $book_db->add_book( title => $title, author => $author, section => $section, shelf => $shelf, taken => $taken );
-    print "Book has been added to the database\n".  scalar ( keys %{$book_db->get_books} ) ." books in total\n";
+    print "Book has been added to the database\n".  scalar ( keys %{$book_db->get_books} ) ." book(s) in total\n";
     save_books($book_db);
-    return;
+    return $book_db;
 }
 
 sub print_book {
@@ -117,7 +118,6 @@ sub print_book {
     }
     for my $book ( sort { $a <=> $b } @books ) {
         print "\n";
-        print "ID: $book\n";
         print "Title: " . $book_db->get_books->{$book}->get_title . "\n";
         print "Author: " . $book_db->get_books->{$book}->get_author . "\n";
         print "Section: " . $book_db->get_books->{$book}->get_section . "\n";
@@ -129,66 +129,84 @@ sub print_book {
 }
 
 sub get_pattern {
-    my ( $strategy, $pattern );
+    my ( $strategy, $pattern, $choise ) = ( '', '', '' );
+    my %strategies                      = ( 1 => 'title', 2 => 'author', 3 => 'section', 4 => 'shelf', 5 => 'taken' );
     print "\n\nSearch strategies:\n1 - by title\n2 - by author\n3 - by section\n4 - by shelf\n5 - by person\n";
-    print "Strategy: ";
-    chomp( $strategy = <STDIN> );
-    while ( $strategy !~ /^(1|2|3|4|5)$/ ) {
-        print "\nChoose between 1-5: ";
-        chomp( $strategy = <STDIN> );
+    print "> Strategy: ";
+    chomp( $choise = <STDIN> );
+    while ( $choise !~ /^(1|2|3|4|5)$/ ) {
+        print "\n> Choose between 1-5: ";
+        chomp( $choise = <STDIN> );
     }
-    if ( $strategy == 1 ) {
-        $strategy = 'title';
-    }
-    elsif ( $strategy == 2 ) {
-        $strategy = 'author';
-    }
-    elsif ( $strategy == 3 ) {
-        $strategy = 'section';
-    }
-    elsif ( $strategy == 4 ) {
-        $strategy = 'shelf';
-    }
-    elsif ( $strategy == 5 ) {
-        $strategy = 'taken';
-    }
-    print "\nEnter a search pattern: ";
+    $strategy = $strategies{$choise};
+    print "\n> Enter a search pattern: ";
     chomp( $pattern = <STDIN> );
-    
-    return $strategy, $pattern;
+    return ( [ $strategy, $pattern ] );
 }
 
 sub parse_pattern {
     my $row = shift;
-    my ( $strategy, $pattern );
-    if ( $row =~ /^\w+\s*=\s*.+/ ) {
-        $strategy = $row =~ s/\s*=.*//r;
-        $pattern = $row =~ s/^\w+\s*=\s*//r;
-        if ( $strategy =~ /^(title|author|reader|shelf|section)$/ ) {
-            return $strategy, $pattern;
+    my ( $strategy, $pattern, @matched ) = ( '', '', () );
+    my @patterns = ( split /\s/, $row );
+    for my $current_strategy (@patterns) {
+        if ( $current_strategy =~ /^\w+\s*=\s*.+/ ) {
+            $strategy = $current_strategy =~ s/\s*=.*//r;
+            $pattern = $current_strategy =~ s/^\w+\s*=\s*//r;
+            if ( $strategy =~ /^(title|author|reader|shelf|section)$/ ) {
+                push @matched, ( [ $strategy, $pattern ] );
+            }
+            else {
+                print "No such strategy: $strategy\n";
+            }
         }
     }
-    return;
+    print "Here what I return: @matched\n";
+    @matched ? return @matched : return;
+}
+
+sub merge_results {
+    my ($anon_arrays) = @_;
+    my ( @result, %count ) = ();
+    for my $array ( @{ $anon_arrays } ) {
+        print "$array\n";
+        for my $book ( @{$array} ) {
+            $count{$book}++;
+        }
+    }
+    for my $elem ( keys %count ) {
+        if ( $count{$elem} > 1 ) {
+            push @result, $elem;
+        }
+    }
+    return @result;
 }
 
 sub search_book {
-    my ( $book_db, $pattern, $strategy, @matched )  = ( @_, '', () );
-    if ( !$pattern ) {
-        ( $strategy, $pattern ) = get_pattern;
+    my ( $book_db, $row, $pattern, $strategy, @matched, @passed, @total )  = ( @_, '', '', (), (), () );
+    if ( !$row ) {
+        @passed = get_pattern;
     }
     else {
-        ( $strategy, $pattern ) = parse_pattern($pattern);
+        @passed = parse_pattern($row);
     }
-    if ( $strategy && $pattern ) {
-        @matched = $book_db->search_book( $strategy, $pattern );
+
+    if (@passed) {
+        while (@passed) {
+            ( $strategy, $pattern ) = @{ shift @passed };
+            my @intermediate = $book_db->search_book( $strategy, $pattern );
+            print "@passed left\n";
+            push @matched, ( [@intermediate] );
+        }
+        @matched = merge_results( \@matched );
+
         if ( @matched ) {
             print "Found books:\n";
             print_book( $book_db, @matched );
-            print "Found " . @matched . " books\n";
+            print "Found " . @matched . " book(s)\n";
             return @matched;
         }
         else {
-            print "No books found using pattern: $strategy=$pattern\n";
+            print "No books found using pattern: " . ( $row ? $row : ( $strategy . "=" . $pattern ) ) . "\n";
         }
     }
     else {
@@ -204,10 +222,10 @@ sub delete_book {
         for my $book ( sort { $a <=> $b } @books_to_delete ) {
             print "====\n";
             print_book( $book_db, $book );
-            print "Delete this book?\nChoose (Y)es, (N)o or (A)ll: ";
+            print "> Delete this book?\nChoose (Y)es, (N)o or (A)ll: ";
             chomp( my $decision = <STDIN> );
             while ( $decision !~  /^(y|Y|n|N|a|A)$/ ) {
-                print "\nChoose Y, N or A: ";
+                print "\n> Choose Y, N or A: ";
                 chomp( $decision = <STDIN> );
             }
             if ( $decision =~ 'y|Y' ) {
@@ -236,14 +254,14 @@ sub delete_book {
 
 sub save_books {
     my $book_db = shift;
-    print "\nWould you like to save changes? (Y/N): ";
+    print "\n> Would you like to save changes? (Y/N): ";
     chomp( my $decision = <STDIN> );
     while ( $decision !~  /^(y|Y|n|N)$/ ) {
-        print "\nChoose Y or N: ";
+        print "\n> Choose Y or N: ";
         chomp( $decision = <STDIN> );
     }
     if ( $decision =~ 'y|Y' ) {
-        print "Enter path to the file for saving: ";
+        print "> Enter path to the file for saving: ";
         chomp ( my $file = <STDIN>);
         $book_db->save_db($file);
         if ($@) {
@@ -269,7 +287,7 @@ for ( greeting; <STDIN>; greeting ) {
         $database_obj = load_database( $database_obj, $path );
     }
     elsif ( /^a\b/ ) {
-        add_book($database_obj);
+        $database_obj = add_book($database_obj);
     }
     elsif ( /^p\b/ ) {
         !$database_obj ? remind : print_book($database_obj);

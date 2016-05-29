@@ -11,13 +11,12 @@ use Keeper;
 sub new {
     my $class = shift;
     my $self  = { books => {}, file => undef };
-    bless($self, $class);
+    bless( $self, $class );
     return $self;
 }
 
 sub load_db {
     my ( $book_db, $file ) = @_;
-    my $id      = 0;
     eval {
         open( my $database, '<', $file ) or die "Cannot open a file $file: $!\n";
         $book_db->set_file($file);
@@ -52,14 +51,20 @@ sub load_db {
 
 sub add_book {
     my $book_db = shift;
-    my $id      = ( scalar( keys %{$book_db->get_books} ) ) + 1;
+    my $id      = increase_id;
     $book_db->{books}{$id} = Keeper->new(@_);
     return;
 }
 
 sub search_book {
-    my ( $book_db, $strategy, $pattern, @matched ) = ( @_, () );
-    my $expression = qr/$pattern/;
+    my ( $book_db, $strategy, $pattern ) = ( @_ );
+    my ( $expression, @matched )         = ( '', () );
+    if ( $pattern =~ s/^"([^"]+)"$/$1/ ) {
+        $expression = qr/^$pattern$/;
+    }
+    else {
+        $expression = qr/$pattern/;
+    }
     for my $book ( keys %{ $book_db->{books} } ) {
         my $method   = 'get_' . $strategy;
         my $matching = $book_db->{books}{$book}->$method;
@@ -67,7 +72,7 @@ sub search_book {
             push @matched, $book;
         }
     }
-    return @matched;
+    @matched ? return @matched : return;
 }
 
 sub delete_book {
