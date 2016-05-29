@@ -57,15 +57,16 @@ sub add_book {
 }
 
 sub search_book {
-    my ( $book_db, $strategy, $pattern ) = ( @_ );
-    my ( $expression, @matched )         = ( '', () );
+    my ( $book_db, $strategy, $pattern, @ids ) = ( @_ );
+    my ( $expression, @matched, @books )       = ( '', (), () );
+    @ids ? ( @books = @ids ) : ( @books = ( keys %{ $book_db->{books} } ) );
     if ( $pattern =~ s/^"([^"]+)"$/$1/ ) {
         $expression = qr/^$pattern$/;
     }
     else {
         $expression = qr/$pattern/;
     }
-    for my $book ( keys %{ $book_db->{books} } ) {
+    for my $book (@books) {
         my $method   = 'get_' . $strategy;
         my $matching = $book_db->{books}{$book}->$method;
         if ( $matching =~ $expression ) {

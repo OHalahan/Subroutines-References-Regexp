@@ -160,7 +160,6 @@ sub parse_pattern {
             }
         }
     }
-    print "Here what I return: @matched\n";
     @matched ? return @matched : return;
 }
 
@@ -168,7 +167,6 @@ sub merge_results {
     my ($anon_arrays) = @_;
     my ( @result, %count ) = ();
     for my $array ( @{ $anon_arrays } ) {
-        print "$array\n";
         for my $book ( @{$array} ) {
             $count{$book}++;
         }
@@ -183,20 +181,20 @@ sub merge_results {
 
 sub search_book {
     my ( $book_db, $row, $pattern, $strategy, @matched, @passed, @total )  = ( @_, '', '', (), (), () );
-    if ( !$row ) {
-        @passed = get_pattern;
-    }
-    else {
-        @passed = parse_pattern($row);
-    }
+    $row ? ( @passed = parse_pattern($row) ) : ( @passed = get_pattern );
+
     if (@passed) {
+        ( $strategy, $pattern ) = @{ shift @passed };
+        my @first_found = $book_db->search_book( $strategy, $pattern );
+        #other patterns? perform search within books which were found at first iteration
         while (@passed) {
             ( $strategy, $pattern ) = @{ shift @passed };
-            my @intermediate = $book_db->search_book( $strategy, $pattern );
+            my @intermediate = $book_db->search_book( $strategy, $pattern, @first_found );
             push @matched, ( [@intermediate] );
         }
-        @matched = merge_results( \@matched );
+
         if ( @matched ) {
+            ( @matched > 1 ) ? ( @matched = merge_results( \@matched ) ): ( @matched = @first_found );
             print "Found books:\n";
             print_book( $book_db, @matched );
             print "Found " . @matched . " book(s)\n";
