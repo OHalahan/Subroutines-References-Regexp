@@ -12,7 +12,7 @@ sub greeting {
 
 sub print_help {
     print "\n============\n";
-    print "\nExample of search pattern:\nf author=\"O'Reilly\" shelf=2 section=WML|Java\n";
+    print "\nExample of search pattern:\nf shelf=2 section=Java|XML title=2nd edition\n";
     print "\nType request in double quotes for exact match\n";
     print "\nIf a pattern is not specified, you will be prompted to choose a search strategy\n";
     print "\n============\n";
@@ -56,7 +56,7 @@ sub load_database {
         print "\n$@\n";
     }
     else {
-        print "\nDone. Loaded " . scalar ( keys %{$book_db->get_books} ) . " book(s) in total\n";
+        print "\nDone. Loaded file $file. " . scalar ( keys %{$book_db->get_books} ) . " book(s) in total\n";
         return $book_db;
     }
     return;
@@ -138,7 +138,7 @@ sub parse_pattern {
 
 sub merge_results {
     my ($anon_arrays) = @_;
-    my ( @result, %count ) = ();
+    my ( @result, %count ) = ( () );
     for my $array ( @{$anon_arrays} ) {
         for my $book ( @{$array} ) {
             $count{$book}++;
@@ -159,7 +159,6 @@ sub search_book {
     if (@passed) {
         ( $strategy, $pattern ) = @{ shift @passed };
         my @first_found = $book_db->search_book( $strategy, $pattern );
-        print "I'm here and found @first_found\n";
         #other patterns? perform search within books which were found at first iteration
         #in order not to check whole book database again
         while (@passed) {
@@ -167,8 +166,7 @@ sub search_book {
             my @intermediate = $book_db->search_book( $strategy, $pattern, @first_found );
             push @matched, ( [@intermediate] );
         }
-
-        ( @matched > 1 ) ? ( @matched = merge_results( \@matched ) ): ( @matched = @first_found );
+        ( @matched > 1 ) ? @matched = merge_results( \@matched ) : ( @matched = @first_found );
         if (@matched) {
             print "Found books:\n";
             print_book( $book_db, @matched );
