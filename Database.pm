@@ -10,7 +10,7 @@ use Keeper;
 
 sub new {
     my $class = shift;
-    my $self  = { books => {}, file => undef };
+    my $self = { books => {}, file => undef };
     bless( $self, $class );
     return $self;
 }
@@ -21,21 +21,21 @@ sub load_db {
         open( my $database, '<', $file ) or die "Cannot open a file $file: $!\n";
         $book_db->set_file($file);
         my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
-        while ( <$database> ) {
+        while (<$database>) {
             chomp;
-            if ( /^Title/ ) {
+            if (/^Title/) {
                 $title = s/^Title:\s//r;
             }
-            elsif ( /^Author/ ) {
+            elsif (/^Author/) {
                 $author = s/^Author:\s//r;
             }
-            elsif ( /^Section/ ) {
+            elsif (/^Section/) {
                 $section = s/^Section:\s//r;
             }
-            elsif ( /^Shelf/ ) {
+            elsif (/^Shelf/) {
                 $shelf = s/^Shelf:\s//r;
             }
-            elsif ( /^On Hands/ ) {
+            elsif (/^On Hands/) {
                 $taken = s/^On Hands:\s//r;
             }
             elsif ( /^$/ && $title && $author ) {
@@ -57,8 +57,8 @@ sub add_book {
 }
 
 sub search_book {
-    my ( $book_db, $strategy, $pattern, @ids ) = ( @_ );
-    my ( $expression, @matched, @books )       = ( '', (), () );
+    my ( $book_db, $strategy, $pattern, @ids ) = @_;
+    my ( $expression, @matched, @books ) = ( '', (), () );
     @ids ? ( @books = @ids ) : ( @books = ( keys %{ $book_db->{books} } ) );
     if ( $pattern =~ s/^"([^"]+)"$/$1/ ) {
         $expression = qr/^$pattern$/;
@@ -106,9 +106,10 @@ sub save_db {
 }
 
 our $AUTOLOAD;
+
 sub AUTOLOAD {
-    my ($self, $arg) = @_;
-    my ($prefix, $attr) = $AUTOLOAD =~ /.*::(set|get)_(.*)/;
+    my ( $self,   $arg )  = @_;
+    my ( $prefix, $attr ) = $AUTOLOAD =~ /.*::(set|get)_(.*)/;
     if ( $prefix eq 'get' ) {
         return $self->{$attr};
     }

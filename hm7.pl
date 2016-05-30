@@ -4,33 +4,6 @@ use strict;
 use warnings;
 use Database;
 
-# A small library's database is stored in a file books.txt .
-#
-# Write a console application which manages the database.
-# It prints on a terminal all possible actions and waits for a user input.
-#
-# load <file>        - loads the database file;
-# search [<pattern>] - searches for books by a given pattern. If a patten is not specified,
-# the program prints all possible search srategies and waits until a user types a number of the strategy:
-# - by name
-# - by author
-# - ..
-#
-# After choosing the strategy, the program prompts "Type a criteria" then waits for a user input.
-#
-# add book - push a user through a dialog which prints prompts "Type book name", "Type author", etc.
-# After that saves a new book to the database;
-#
-# delete book <pattern> - deletes books; command find books by pattern, prints all found books.
-# Then prints each found book and asks delete conformation. user types action yY - delete book
-# nN - skip book A - detete all books remained in a list.
-#
-# PATTERN examples: name=Java* author='Randal Schwartz' reader='Jimmy Fox' shelf=1 tag=XML|Python
-#
-# NOTES:
-# Use closures for implementing iterators of found books. Use "event driven" paradigm while implementing this application.
-# You may implement other action, which your program could support.
-
 sub greeting {
     print "\nPossible actions:\nl\tload <file>\na\tadd book\nd\tdelete book <pattern>\nf\tfind book <pattern>\np\tprint books\ns\tsave books\nh\thelp\ne\texit\n";
     print "\n> Type a required action and press ENTER: ";
@@ -39,7 +12,7 @@ sub greeting {
 
 sub print_help {
     print "\n============\n";
-    print "\nExamples of search patterns:\nname=Java* \nauthor=\"Randal Schwartz\"\nreader=\"Jimmy Fox\"\nshelf=1\nsection=XML|Python\n";
+    print "\nExample of search pattern:\nf author=\"O'Reilly\" shelf=2 section=WML|Java\n";
     print "\nType request in double quotes for exact match\n";
     print "\nIf a pattern is not specified, you will be prompted to choose a search strategy\n";
     print "\n============\n";
@@ -55,8 +28,7 @@ sub load_database {
     my ( $book_db, $file ) = @_;
     if ( !$file ) {
         print "> Enter path to the file: ";
-        #chomp ( $file = <STDIN> );
-        $file = 'books.txt';
+        chomp( $file = <STDIN> );
     }
 
     if ( !$book_db ) {
@@ -75,14 +47,15 @@ sub load_database {
             $book_db = Database->new();
         }
         elsif ( $decision =~ 'n|N' ) {
-            print "\nOK. New file will append to the existing database\n";
+            print "\nOK. New file will append to existing database\n";
         }
     }
 
     $book_db->load_db($file);
     if ($@) {
-        print  "\n$@\n";
-    } else {
+        print "\n$@\n";
+    }
+    else {
         print "\nDone. Loaded " . scalar ( keys %{$book_db->get_books} ) . " book(s) in total\n";
         return $book_db;
     }
@@ -151,7 +124,7 @@ sub parse_pattern {
     for my $current_strategy (@patterns) {
         if ( $current_strategy =~ /^\w+\s*=\s*.+/ ) {
             $strategy = $current_strategy =~ s/\s*=.*//r;
-            $pattern = $current_strategy =~ s/^\w+\s*=\s*//r;
+            $pattern  = $current_strategy =~ s/^\w+\s*=\s*//r;
             if ( $strategy =~ /^(title|author|reader|shelf|section)$/ ) {
                 push @matched, ( [ $strategy, $pattern ] );
             }
@@ -166,7 +139,7 @@ sub parse_pattern {
 sub merge_results {
     my ($anon_arrays) = @_;
     my ( @result, %count ) = ();
-    for my $array ( @{ $anon_arrays } ) {
+    for my $array ( @{$anon_arrays} ) {
         for my $book ( @{$array} ) {
             $count{$book}++;
         }
@@ -176,7 +149,7 @@ sub merge_results {
             push @result, $elem;
         }
     }
-    return @result;
+    @result ? return @result : return;
 }
 
 sub search_book {
@@ -186,15 +159,17 @@ sub search_book {
     if (@passed) {
         ( $strategy, $pattern ) = @{ shift @passed };
         my @first_found = $book_db->search_book( $strategy, $pattern );
+        print "I'm here and found @first_found\n";
         #other patterns? perform search within books which were found at first iteration
+        #in order not to check whole book database again
         while (@passed) {
             ( $strategy, $pattern ) = @{ shift @passed };
             my @intermediate = $book_db->search_book( $strategy, $pattern, @first_found );
             push @matched, ( [@intermediate] );
         }
 
-        if ( @matched ) {
-            ( @matched > 1 ) ? ( @matched = merge_results( \@matched ) ): ( @matched = @first_found );
+        ( @matched > 1 ) ? ( @matched = merge_results( \@matched ) ): ( @matched = @first_found );
+        if (@matched) {
             print "Found books:\n";
             print_book( $book_db, @matched );
             print "Found " . @matched . " book(s)\n";
@@ -211,38 +186,32 @@ sub search_book {
 }
 
 sub delete_book {
-    my $book_db = shift;
-    my @books_to_delete = search_book($book_db);
+    my ( $book_db, $pattern ) = @_;
+    my @books_to_delete = search_book( $book_db, $pattern );
     if (@books_to_delete) {
+        my $decision = '';
         for my $book ( sort { $a <=> $b } @books_to_delete ) {
-            print "====\n";
-            print_book( $book_db, $book );
-            print "> Delete this book?\nChoose (Y)es, (N)o or (A)ll: ";
-            chomp( my $decision = <STDIN> );
-            while ( $decision !~  /^(y|Y|n|N|a|A)$/ ) {
-                print "\n> Choose Y, N or A: ";
+            if ( $decision !~ /a|A/ ) {
+                print "====\n";
+                print_book( $book_db, $book );
+                print "> Delete this book?\nChoose (Y)es, (N)o or (A)ll: ";
                 chomp( $decision = <STDIN> );
-            }
-            if ( $decision =~ 'y|Y' ) {
-                $book_db->delete_book($book);
-                shift @books_to_delete;
-            }
-            elsif ( $decision =~ 'n|N' ) {
-                print "\nSkipping this one\n";
-                shift @books_to_delete;
-            }
-            else {
-                for my $every_book (@books_to_delete) {
-                    $book_db->delete_book($every_book);
+                while ( $decision !~ /^(y|Y|n|N|a|A)$/ ) {
+                    print "\n> Choose Y, N or A: ";
+                    chomp( $decision = <STDIN> );
                 }
-                last;
+                if ( $decision =~ 'n|N' ) {
+                    print "\nSkipping this one\n";
+                    next;
+                }
             }
+            $book_db->delete_book($book);
         }
         print "\nMatched books were processed. " . scalar ( keys %{$book_db->get_books} ) . " books left\n";
         save_books($book_db);
     }
     else {
-        print "Nothing to delete\n"
+        print "Nothing to delete\n";
     }
     return;
 }
@@ -251,13 +220,13 @@ sub save_books {
     my $book_db = shift;
     print "\n> Would you like to save changes? (Y/N): ";
     chomp( my $decision = <STDIN> );
-    while ( $decision !~  /^(y|Y|n|N)$/ ) {
+    while ( $decision !~ /^(y|Y|n|N)$/ ) {
         print "\n> Choose Y or N: ";
         chomp( $decision = <STDIN> );
     }
     if ( $decision =~ 'y|Y' ) {
         print "> Enter path to the file for saving: ";
-        chomp ( my $file = <STDIN>);
+        chomp( my $file = <STDIN> );
         $book_db->save_db($file);
         if ($@) {
             print "$@\n";
@@ -273,37 +242,37 @@ sub save_books {
 }
 
 my $database_obj = undef;
-for ( greeting; <STDIN>; greeting ) {
+for ( greeting ; <STDIN> ; greeting ) {
     chomp;
-    if ( /^l\b/ ) {
+    if (/^l\b/) {
         s/^l\s*//;
         my $path = s/^\w+\s+//r;
         print "$path\n";
         $database_obj = load_database( $database_obj, $path );
     }
-    elsif ( /^a\b/ ) {
+    elsif (/^a\b/) {
         $database_obj = add_book($database_obj);
     }
-    elsif ( /^p\b/ ) {
+    elsif (/^p\b/) {
         !$database_obj ? remind : print_book($database_obj);
     }
-    elsif ( /^d\b/ ) {
+    elsif (/^d\b/) {
         s/^d\s*//;
         my $pattern = s/^\w+\s+//r;
         !$database_obj ? remind : delete_book( $database_obj, $pattern );
     }
-    elsif ( /^f\b/ ) {
+    elsif (/^f\b/) {
         s/^f\s*//;
         my $pattern = s/^\w+\s+//r;
         !$database_obj ? remind : search_book( $database_obj, $pattern );
     }
-    elsif ( /^s\b/ ) {
+    elsif (/^s\b/) {
         !$database_obj ? remind : save_books($database_obj);
     }
-    elsif ( /^h\b/ ) {
+    elsif (/^h\b/) {
         print_help;
     }
-    elsif ( /^e\b/ ) {
+    elsif (/^e\b/) {
         print "Bye\n";
         exit;
     }
