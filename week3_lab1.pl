@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use Database;
+use English qw( -no_match_vars );
 
 sub greeting {
     print "\nPossible actions:\nl\tload <file>\na\tadd book\nd\tdelete book <pattern>\nf\tfind book <pattern>\np\tprint books\ns\tsave books\nh\thelp\ne\texit\n";
