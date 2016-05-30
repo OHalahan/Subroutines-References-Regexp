@@ -53,8 +53,8 @@ sub load_database {
     }
 
     $book_db->load_db($file);
-    if ($@) {
-        print "\n$@\n";
+    if ($EVAL_ERROR) {
+        print "\n$EVAL_ERROR\n";
     }
     else {
         print "\nDone. Loaded file $file. " . scalar ( keys %{$book_db->get_books} ) . " book(s) in total\n";
@@ -184,6 +184,34 @@ sub search_book {
     return;
 }
 
+sub save_books {
+    my ( $book_db, $file ) = @_;
+
+    print "\n> Would you like to save changes? (Y/N): ";
+    chomp( my $decision = <STDIN> );
+    while ( $decision !~ /^(y|Y|n|N)$/ ) {
+        print "\n> Choose Y or N: ";
+        chomp( $decision = <STDIN> );
+    }
+    if ( $decision =~ 'y|Y' ) {
+        if ( !$file ) {
+            print "> Enter path to the file for saving: ";
+            chomp( $file = <STDIN> );
+        }
+        $book_db->save_db($file);
+        if ($EVAL_ERROR) {
+            print "$EVAL_ERROR\n";
+        }
+        else {
+            print "\nBooks saved!\n\n";
+        }
+    }
+    elsif ( $decision =~ 'n|N' ) {
+        print "\nOK. Returning to main menu\n";
+    }
+    return;
+}
+
 sub delete_book {
     my ( $book_db, $pattern ) = @_;
     my @books_to_delete = search_book( $book_db, $pattern );
@@ -215,38 +243,12 @@ sub delete_book {
     return;
 }
 
-sub save_books {
-    my $book_db = shift;
-    print "\n> Would you like to save changes? (Y/N): ";
-    chomp( my $decision = <STDIN> );
-    while ( $decision !~ /^(y|Y|n|N)$/ ) {
-        print "\n> Choose Y or N: ";
-        chomp( $decision = <STDIN> );
-    }
-    if ( $decision =~ 'y|Y' ) {
-        print "> Enter path to the file for saving: ";
-        chomp( my $file = <STDIN> );
-        $book_db->save_db($file);
-        if ($@) {
-            print "$@\n";
-        }
-        else {
-            print "\nBooks saved!\n\n";
-        }
-    }
-    elsif ( $decision =~ 'n|N' ) {
-        print "\nOK. Returning to main menu\n";
-    }
-    return;
-}
-
 my $database_obj = undef;
 for ( greeting ; <STDIN> ; greeting ) {
     chomp;
     if (/^l\b/) {
         s/^l\s*//;
         my $path = s/^\w+\s+//r;
-        print "$path\n";
         $database_obj = load_database( $database_obj, $path );
     }
     elsif (/^a\b/) {
@@ -266,7 +268,9 @@ for ( greeting ; <STDIN> ; greeting ) {
         !$database_obj ? remind : search_book( $database_obj, $pattern );
     }
     elsif (/^s\b/) {
-        !$database_obj ? remind : save_books($database_obj);
+        s/^s\s*//;
+        my $path = s/^\w+\s+//r;
+        !$database_obj ? remind : save_books( $database_obj, $path );
     }
     elsif (/^h\b/) {
         print_help;

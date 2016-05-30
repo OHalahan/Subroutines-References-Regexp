@@ -1,5 +1,9 @@
 package Database;
+
+use strict;
+use warnings;
 use Keeper;
+use English qw( -no_match_vars );
 
 {
     my $id_counter = 0;
@@ -18,7 +22,7 @@ sub new {
 sub load_db {
     my ( $book_db, $file ) = @_;
     eval {
-        open( my $database, '<', $file ) or die "Cannot open a file $file: $!\n";
+        open( my $database, '<', $file ) or die "Cannot open a file $file: $OS_ERROR\n";
         $book_db->set_file($file);
         my ( $title, $author, $section, $shelf, $taken ) = ( '', '', '', '', '' );
         while (<$database>) {
@@ -46,7 +50,7 @@ sub load_db {
         }
         close $database;
     };
-    $@ ? return $@ : return $book_db;
+    $EVAL_ERROR ? return $EVAL_ERROR : return $book_db;
 }
 
 sub add_book {
@@ -90,7 +94,7 @@ sub delete_book {
 sub save_db {
     my ( $book_db, $file ) = @_;
     eval {
-        open( my $fh, '>', $file ) or die "Cannot create a file $file: $!\n";
+        open( my $fh, '>', $file ) or die "Cannot create a file $file: $OS_ERROR\n";
 
         for my $book ( sort { $a <=> $b } ( keys %{ $book_db->get_books } ) ) {
             print $fh "\n";
@@ -102,7 +106,7 @@ sub save_db {
             print $fh "\n";
         }
     };
-    $@ ? return $@ : return;
+    $EVAL_ERROR ? return $EVAL_ERROR : return;
 }
 
 our $AUTOLOAD;
