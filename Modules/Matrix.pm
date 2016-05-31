@@ -6,23 +6,24 @@ use Exporter;
 our @ISA = ("Exporter");
 our @EXPORT = qw(&generate &min_max_avg &print_matrix);
 
-sub generate ($$$) {
+sub generate ( $$$ ) {
+    my ( $y, $x, $p ) = @_;
     my $matrix;
-    for my $i ( 0 .. $_[1] ) {
-        for my $j ( 0 .. $_[0] ) {
-            $matrix->[$i][$j] = rand($_[2]);
+    for my $i ( 0 .. $y ) {
+        for my $j ( 0 .. $x ) {
+            $matrix->[$i][$j] = rand($p);
         }
     }
     return $matrix;
 }
 
 sub min_max_avg ($) {
-    my @sorted;
-    my $sum = 0;
-    for (@{$_[0]}) {
-        for (@{$_}) {
-            push (@sorted, $_);
-            $sum += $_;
+    my $array = shift;
+    my ( $sum, @sorted ) = ( 0, () );
+    for my $elem ( @{$array} ) {
+        for my $val ( @{$elem} ) {
+            push( @sorted, $val );
+            $sum += $val;
         }
     }
     @sorted = sort { $a <=> $b } @sorted;
@@ -33,8 +34,11 @@ sub min_max_avg ($) {
 }
 
 sub print_matrix ($@) {
-    print "@$_\n" for @{$_[0]};
-    print "\nminimum value is: $_[1]\n";
-    print "maximum value is: $_[2]\n";
-    print "average value is: $_[3]\n";
+    my ( $reference, $min, $max, $avg ) = @_;
+    for my $array (@{$reference}) {
+        print "@{$array}\n";
+    }
+    print "\nminimum value is: $min\n";
+    print "maximum value is: $max\n";
+    print "average value is: $avg\n";
 }
