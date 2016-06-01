@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 use Database;
-use English qw( -no_match_vars );
 
 sub greeting {
     print "\nPossible actions:\nl\tload <file>\na\tadd book\nd\tdelete book <pattern>\nf\tfind book <pattern>\np\tprint books\ns\tsave books\nh\thelp\ne\texit\n";
@@ -53,8 +52,8 @@ sub load_database {
     }
 
     $book_db->load_db($file);
-    if ($EVAL_ERROR) {
-        print "\n$EVAL_ERROR\n";
+    if ($@) {
+        print "\n$@\n";
     }
     else {
         print "\nDone. Loaded file $file. " . scalar ( keys %{$book_db->get_books} ) . " book(s) in total\n";
@@ -199,8 +198,8 @@ sub save_books {
             chomp( $file = <STDIN> );
         }
         $book_db->save_db($file);
-        if ($EVAL_ERROR) {
-            print "$EVAL_ERROR\n";
+        if ($@) {
+            print "$@\n";
         }
         else {
             print "\nBooks saved!\n\n";

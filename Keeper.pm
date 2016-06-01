@@ -2,7 +2,6 @@ package Keeper;
 
 use strict;
 use warnings;
-use English qw( -no_match_vars );
 
 sub new {
     my $class = shift;
