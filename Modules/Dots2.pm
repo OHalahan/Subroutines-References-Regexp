@@ -5,7 +5,7 @@ package Modules::Dots2;
 use strict;
 use warnings;
 use feature "switch";
-use parent ("Modules::Dots");
+use parent ( "Modules::Dots" );
 
 sub check {
     my ($x, $y, $objects, $global_x, $global_y, $obstacles) = @_;
@@ -23,8 +23,8 @@ sub move_all {
     my $objects = shift;
     for (@{$objects}) {
         my ($new_x, $new_y) = ($_->move());
-        unless (check($new_x, $new_y, $objects, @_)) {
-            $_->set_x($new_x); 
+        unless (check( $new_x, $new_y, $objects, @_ )) {
+            $_->set_x($new_x);
             $_->set_y($new_y);
         } else {
             $_->set_dir;
@@ -46,8 +46,8 @@ sub print_out {
 
     for (@{$objects}) {
         if ($matrix->[$_->get_x][$_->get_y] eq " ") {
-            $matrix->[$_->get_x][$_->get_y] = "X";    
-        }         
+            $matrix->[$_->get_x][$_->get_y] = "X";
+        }
     }
 
     print "\033[2J";
