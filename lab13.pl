@@ -22,46 +22,46 @@ use warnings;
     }
 }
 
-sub results {
-    my $data = shift;
-    my %own_data;
-    if ($data) {
-        %own_data = %{$data};
+sub print_stat {
+    my $own_data = shift;
+    if ( $own_data->{stat} ) {
+        print "\nAverage running processes: $own_data->{stat}\n";
     }
     else {
-        $own_data{memo} = qx( free -m | tail -2 | head -1 | awk {'print \$4'} );
-        return ( \%own_data );
+        print "\nNo statistics yet.\nCurrent number of running processes: $own_data->{current}\n";
     }
-    return undef;
-}
-
-sub print_stat {
-    my $data = results;
-    $data->{stat} ? last : $data->{stat} = 0;
-    print "Average statistics for processes: $data->{stat}\n";
     return undef;
 }
 
 sub print_memo {
-    my $data = results;
-    print "Free memory: $data->{memo}\n";
+    my $own_data = shift;
+    print "\nFree memory: $own_data->{memo} MB\n";
     return undef;
 }
+
+sub quit {
+    kill( 'USR1', $$ );
+    exit;
+}
+
 ### End of subroutines
 
-my %data;
+my ( $sum, %data ) = ( 0 );
+
+$SIG{USR1}  = sub { print_stat( \%data ); print_memo( \%data ) };
+$SIG{USR2}  = sub { print_memo( \%data ) };
+$SIG{INT}   = \&quit;
+
 while (1) {
     if ( !get_count ) {
-        $data{stat} += qx( ps -A | wc -l );
-
+        chomp( $data{memo}    = qx( free -m | tail -2 | head -1 | awk {'print \$4'} ) );
+        # -1 to exclude header of ps command
+        chomp( $data{current} = ( qx( ps -A | wc -l ) - 1 ) );
+        $sum += $data{current};
     }
     else {
-        $data{stat} = ( $data{stat} / 10 );
-        print "$data{stat}\n";
-        results( \%data );
-        $data{stat} = 0;
+        $data{stat} = ( $sum / 10 );
+        $sum = 0;
     }
-    print_memo;
-    print_stat;
     sleep 1;
 }
