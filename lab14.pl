@@ -37,6 +37,8 @@ for my $file (@files) {
         my @findings = ();
         open( my $fh, '<', $file ) or die "Cannot open a file $file: $!\n";
         #first, find matches.
+        #No one knows how long it will take for this child
+        #so no need to prevent others from writing at this step
         while ( <$fh> ) {
             chomp;
             while ( m/(\b\w*$regexp\w*\b)/isg ) {
