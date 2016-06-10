@@ -1471,3 +1471,67 @@ test3:
 	line 3: op
 	line 3: op
 	line 3: sdfopsdff
+
+Given regexp: op
+
+test:
+	line 1: op
+	line 1: op
+	line 2: op
+	line 3: op
+	line 3: op
+	line 3: op
+	line 3: op
+
+test2:
+	line 1: op
+	line 1: op
+	line 2: op
+	line 3: op
+	line 3: op
+	line 3: op
+	line 3: op
+
+test4:
+	No matches found
+
+test3:
+	line 1: op
+	line 1: op
+	line 2: op
+	line 3: op
+	line 3: op
+	line 3: op
+	line 3: op
+
+Given regexp: \b\w*op\w*\b
+
+test:
+	line 1: op
+	line 1: op
+	line 2: op
+	line 3: op
+	line 3: op
+	line 3: op
+	line 3: sdfopsdff
+
+test2:
+	line 1: op
+	line 1: op
+	line 2: op
+	line 3: op
+	line 3: op
+	line 3: op
+	line 3: sdfopsdff
+
+test4:
+	No matches found
+
+test3:
+	line 1: op
+	line 1: op
+	line 2: op
+	line 3: op
+	line 3: op
+	line 3: op
+	line 3: sdfopsdff
