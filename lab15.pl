@@ -52,8 +52,7 @@ for (@input) {
     print;
 }
 
-#push @{ $HoA{"flintstones"} }, "wilma", "betty";
-
+push @{ $HoA{"flintstones"} }, "wilma", "betty";
 
 for my $child (@kids) {
     waitpid $child, 0;
