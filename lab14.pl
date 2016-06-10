@@ -19,7 +19,7 @@ for my $file (@files) {
     }
     else {
         my @findings = ();
-        open( my $fh, '<', $file ) or die "Cannot open a file $file: $!\n";
+        open( my $fh, '<', $file ) or die "\n$file:\n\tCannot open a file $file: $!\n";
         #first, find matches.
         #No one knows how long it will take for this child
         #so no need to prevent others from writing at this step
