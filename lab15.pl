@@ -7,12 +7,11 @@ use Fcntl qw( :flock );
 my ( $pattern, @files ) = @ARGV;
 my ( $reader, $writer, @kids ) = ( undef, undef, () );
 my $regexp  = qr/$pattern/;
-
 pipe( $reader, $writer );
 
 for my $file (@files) {
-    my $pid = fork;
 
+    my $pid = fork;
     if ($pid) {
         push @kids, $pid;
     }
@@ -44,16 +43,25 @@ for my $file (@files) {
 
 close $writer;
 
-my @input = <$reader>;
-close $reader;
+my ( $pid, $row, %read );
 
 print "\nGiven regexp: $pattern\n";
-for (@input) {
-    print;
+
+#form hash of anonymous arrays where key is a PID of a child;
+while (<$reader>) {
+    $pid = $_;
+    ( $row = $pid ) =~ s/^\d+\s//gs;
+    $pid =~ /(^\d+)\s/;
+    if ($1) { push @{ $read{$1} }, $row; }
 }
 
-#push @{ $HoA{"flintstones"} }, "wilma", "betty";
+for my $child (@kids) {
+    if ( $read{$child} ) {
+        print "@{ $read{$child} }";
+    }
+}
 
+close $reader;
 for my $child (@kids) {
     waitpid $child, 0;
 }
