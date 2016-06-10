@@ -9,7 +9,6 @@ my ( $reader, $writer, @kids ) = ( undef, undef, () );
 my $regexp  = qr/$pattern/;
 
 pipe( $reader, $writer );
-print $writer "\nGiven regexp: $pattern\n";
 
 for my $file (@files) {
     my $pid = fork;
@@ -29,17 +28,15 @@ for my $file (@files) {
             }
         }
         #print what was found and identical markers
-        print $writer "\nSTART $$\n";
-        print $writer "\n$file:\n";
+        print $writer "\n$$ $file:\n";
         if (@findings) {
             for my $row (@findings) {
-                print $writer "\t$row\n";
+                print $writer "$$ \t$row\n";
             }
         }
         else {
-            print $writer "\tNo matches found\n";
+            print $writer "$$ \tNo matches found\n";
         }
-        print $writer "\nEND $$\n";
         close $fh;
         exit 0;
     }
@@ -50,14 +47,13 @@ close $writer;
 my @input = <$reader>;
 close $reader;
 
-for my $child (@kids) {
-    for (@input) {
-        if ( /^START $child\b/ .. /^END $child\b/ ) {
-            if ( /START/ || /END/ ) { next; }
-            print;
-        }
-    }
+print "\nGiven regexp: $pattern\n";
+for (@input) {
+    print;
 }
+
+push @{ $HoA{"flintstones"} }, "wilma", "betty";
+
 
 for my $child (@kids) {
     waitpid $child, 0;
