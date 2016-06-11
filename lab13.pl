@@ -14,7 +14,6 @@ use warnings;
 sub average {
     my @summary = @_;
     my $sum     = 0;
-    print @summary . "\n";
     for (@summary) {
         $sum += $_;
     }
@@ -35,7 +34,7 @@ sub print_memo {
 
 sub quit {
     kill( 'USR1', $$ );
-    exit;
+    exit 0;
 }
 
 ### End of subroutines
