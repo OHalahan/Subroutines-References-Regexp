@@ -8,7 +8,7 @@ my ( $pattern, @files ) = @ARGV;
 my ( $output_file, @kids ) = ( './results.txt', () );
 my $regexp  = qr/$pattern/;
 
-my $usage = "Usage: ./lab15.pl REGEXP file1\nExample: ./lab15.pl" . ' "\b\w*op\w*\b" ' . "test\n";
+my $usage = "Usage: ./lab14.pl REGEXP file1\nExample: ./lab14.pl" . ' "\b\w*op\w*\b" ' . "test\n";
 if ( @ARGV < 2 ) { die $usage };
 
 open( my $ofh, '>>', $output_file ) or die "Cannot create a file $output_file: $!\n";

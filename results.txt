@@ -51,3 +51,30 @@ test3:
 
 test4:
 	No matches found
+
+Given regexp: \b\w*op\w*\b
+
+test:
+	line 1: op, op
+	line 2: op
+	line 3: op, op, op, sdfopsdff
+
+test2:
+	line 1: op, op
+	line 2: op
+	line 3: op, op, op, sdfopsdff
+
+test3:
+	line 1: op, op
+	line 2: op
+	line 3: op, op, op, sdfopsdff
+
+test4:
+	No matches found
+
+Given regexp: \b\w*op\w*\b
+
+test:
+	line 1: op, op
+	line 2: op
+	line 3: op, op, op, sdfopsdff
