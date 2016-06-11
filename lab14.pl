@@ -8,6 +8,9 @@ my ( $pattern, @files ) = @ARGV;
 my ( $output_file, @kids ) = ( './results.txt', () );
 my $regexp  = qr/$pattern/;
 
+my $usage = "Usage: ./lab15.pl REGEXP file1\nExample: ./lab15.pl" . ' "\b\w*op\w*\b" ' . "test\n";
+if ( @ARGV < 2 ) { die $usage };
+
 open( my $ofh, '>>', $output_file ) or die "Cannot create a file $output_file: $!\n";
 print $ofh "\nGiven regexp: $pattern\n";
 
@@ -18,7 +21,7 @@ for my $file (@files) {
         push @kids, $pid;
     }
     else {
-        my @findings = ();
+        my %findings;
         open( my $fh, '<', $file ) or die "\n$file:\n\tCannot open a file $file: $!\n";
         #first, find matches.
         #No one knows how long it will take for this child
@@ -26,20 +29,17 @@ for my $file (@files) {
         while ( <$fh> ) {
             chomp;
             while ( m/($regexp)/isg ) {
-                push @findings, "line $.: $1";
+                if ( $findings{$.} ) { @{ $findings{$.} }[0] .= ", $1" }
+                else { push @{ $findings{$.} }, "line $.: $1" }
             }
         }
         #print what was found
         flock( $ofh, LOCK_EX );
         print $ofh "\n$file:\n";
-        if (@findings) {
-            for my $row (@findings) {
-                print $ofh "\t$row\n";
-            }
+        if ( keys %findings ) {
+            for my $row ( sort { $a <=> $b } ( keys %findings ) ) { print $ofh "\t@{ $findings{$row} }\n" }
         }
-        else {
-            print $ofh "\tNo matches found\n";
-        }
+        else { print $ofh "\tNo matches found\n" }
 
         close $fh;
         exit 0;
