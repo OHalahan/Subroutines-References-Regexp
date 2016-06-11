@@ -41,7 +41,7 @@ for my $file (@files) {
 }
 
 close $writer;
-print "\nGiven regexp: $pattern\n";
+
 
 #form hash of anonymous arrays where key is a PID of a child;
 while (<$reader>) {
@@ -51,6 +51,7 @@ while (<$reader>) {
     if ($1) { push @{ $read{$1} }, $row; }
 }
 
+print "\nGiven regexp: $pattern\n\n";
 for my $child (@kids) {
     if ( $read{$child} ) { print "@{ $read{$child} }" }
     waitpid $child, 0;
