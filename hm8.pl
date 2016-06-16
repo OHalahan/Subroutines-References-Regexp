@@ -55,11 +55,25 @@ use Term::ReadKey;
 
 sub print_out {
     my ( $hg, $wd ) = @_;
-    my @matrix;
+    my $matrix;
     #$matrix->[$_->get_x][$_->get_y] = "*";
 
+    for my $row ( 0 .. $wd - 1 ) {
+        for my $elem ( 0 .. $hg - 1 ) {
+            if ( $elem == 0 || $elem == ( $hg - 1 ) ) {
+                $matrix->[$row][$elem] = "|";
+            }
+            elsif ( $row == 1 || $row == ( $wd - 1 ) ) {
+                $matrix->[$row][$elem] = "^";
+            }
+            else {
+                $matrix->[$row][$elem] = " ";
+            }
+        }
+    }
+
     print "\033[2J";
-    for ( @$matrix ) {
+    for ( @{$matrix} ) {
         for (@$_) {
             print "$_";
         }
