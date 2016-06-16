@@ -23,26 +23,55 @@ use Term::ReadKey;
 # http://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
 
 {
+    my ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) = ( 0, 0, 0, 0, 0, 0, 0, 0 );
+    my ( $p_user, $p_nice, $p_system, $p_idle, $p_iowait, $p_irq, $p_srq, $p_steal ) = ( 0, 0, 0, 0, 0, 0, 0, 0 );
+    my ( $p_f_idle, $f_idle, $non_idle, $p_non_idle, $p_total, $total, $totald, $idled, $cpu_percent ) = ( 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+
+    sub get_cpu {
+        my $cpu = qx(cat /proc/stat | head -1 | awk {'print \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9'});
+        ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) = ( split /\s/, $cpu );
+
+        $p_f_idle = $p_idle + $p_iowait;
+        $f_idle   = $idle + $iowait;
+
+        $p_non_idle = $p_user + $p_nice + $p_system + $p_irq + $p_srq + $p_steal;
+        $non_idle   = $user + $nice + $system + $irq + $srq + $steal;
+
+        $p_total = $p_f_idle + $p_non_idle;
+        $total   = $f_idle + $non_idle;
+
+        # differentiate: actual value minus the previous one
+        $totald = $total - $p_total;
+        $idled  = $f_idle - $p_f_idle;
+
+        $cpu_percent = int( ( ($totald - $idled) / $totald ) * 100 );
+
+        ###assigning p_*values:
+        ( $p_user, $p_nice, $p_system, $p_idle, $p_iowait, $p_irq, $p_srq, $p_steal ) = ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) ;
+
+        return $cpu_percent;
+    }
+} ### end of work with CPU percents
+
+sub print_out {
+    my ( $hg, $wd ) = @_;
+    my @matrix;
+    #$matrix->[$_->get_x][$_->get_y] = "*";
+
+    print "\033[2J";
+    for ( @$matrix ) {
+        for (@$_) {
+            print "$_";
+        }
+        print "\n";
+    }
 
 }
-my $cpu = qx(cat /proc/stat | head -1 | awk {'print \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9'});
-( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) = ( split /\s/, $cpu );
 
-$p_f_idle = $p_idle + $p_iowait;
-$f_idle   = $idle + $iowait;
-
-$p_non_idle = $p_user + $p_nice + $p_system + $p_irq + $p_srq + $p_steal;
-$non_idle   = $user + $nice + $system + $irq + $srq + $steal;
-
-$p_total = $p_f_idle + $p_non_idle;
-$total   = $f_idle + $non_idle;
-
-# differentiate: actual value minus the previous one
-$totald = $total - $p_total;
-$idled  = $f_idle - $p_f_idle;
-
-$cpu_percent = ($totald - $idled) / $totald;
-
-
-
-print "percent: $cpu_percent\n";
+while (1) {
+    my ( $wchar, $hchar ) = GetTerminalSize();
+    my $percent = get_cpu;
+    #print "percent: $percent ($wchar, $hchar)\n";
+    print_out( $wchar, $hchar );
+    select(undef, undef, undef, 0.1);
+}
