@@ -2,7 +2,10 @@
 
 use strict;
 use warnings;
+use utf8;
 use Term::ReadKey;
+
+binmode(STDOUT, ":utf8");
 
 # Create a program which monitors a CPU usage on a remote host(s).
 # Use /proc/stat to calculate the total CPU usage (it should be an aggregated value among all cores).
@@ -21,6 +24,7 @@ use Term::ReadKey;
 # These modules may be useful: Term::ANSIColor, Term::ReadKey.
 # http://matrixspace.me/technology/tweaking-cpu-usage-java-linux-part-2/
 # http://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
+# https://en.wikipedia.org/wiki/Box-drawing_character
 
 {
     my ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) = ( 0, 0, 0, 0, 0, 0, 0, 0 );
@@ -53,24 +57,27 @@ use Term::ReadKey;
     }
 } ### end of work with CPU percents
 
+sub make_frame {
+    my ( $hg, $wd, $matrix ) = @_;
+
+    for my $row ( 0 .. $wd - 1 ) {
+        for my $elem ( 0 .. $hg - 1 ) {
+            if ( $elem == 5 || $elem == ( $hg - 5 ) ) { $matrix->[$row][$elem] = "\x{2503}" }
+            elsif ( $row == 5 || $row == ( $wd - 5 ) ) { $matrix->[$row][$elem] = "\x{2501}" }
+            elsif ( $row == 5 || $row == ( $wd - 5 ) ) { $matrix->[$row][$elem] = "\x{2501}" }
+            else { $matrix->[$row][$elem] = " " }
+        }
+    }
+    return $matrix;
+}
+
+
 sub print_out {
     my ( $hg, $wd ) = @_;
     my $matrix;
     #$matrix->[$_->get_x][$_->get_y] = "*";
+    $matrix = make_frame( $hg, $wd, $matrix );
 
-    for my $row ( 0 .. $wd - 1 ) {
-        for my $elem ( 0 .. $hg - 1 ) {
-            if ( $elem == 0 || $elem == ( $hg - 1 ) ) {
-                $matrix->[$row][$elem] = "|";
-            }
-            elsif ( $row == 1 || $row == ( $wd - 1 ) ) {
-                $matrix->[$row][$elem] = "^";
-            }
-            else {
-                $matrix->[$row][$elem] = " ";
-            }
-        }
-    }
 
     print "\033[2J";
     for ( @{$matrix} ) {
