@@ -57,14 +57,28 @@ binmode(STDOUT, ":utf8");
     }
 } ### end of work with CPU percents
 
+sub make_text {
+
+}
+
 sub make_frame {
     my ( $hg, $wd, $matrix ) = @_;
 
     for my $row ( 0 .. $wd - 1 ) {
         for my $elem ( 0 .. $hg - 1 ) {
-            if ( $elem == 5 || $elem == ( $hg - 5 ) ) { $matrix->[$row][$elem] = "\x{2503}" }
-            elsif ( $row == 5 || $row == ( $wd - 5 ) ) { $matrix->[$row][$elem] = "\x{2501}" }
-            elsif ( $row == 5 || $row == ( $wd - 5 ) ) { $matrix->[$row][$elem] = "\x{2501}" }
+            if (   ( $elem == 5 && $row > 5 )
+                || ( $elem == ( $hg - 5 ) && $row > 5 )
+                || ( $elem == ( $hg - 5 ) && $row < ( $wd ) ) )
+            {
+                $matrix->[$row][$elem] = "\x{2503}";
+            }
+
+#elsif ( ( $row == 5 && $elem == 5 ) || $row == ( $wd - 5 ) ) { $matrix->[$row][$elem] = "\x{2501}" }
+            elsif (( $row == 5 && $elem > 5 )
+                || ( $row == ( $wd - 5 ) && $elem > 5 ) )
+            {
+                $matrix->[$row][$elem] = "\x{2501}";
+            }
             else { $matrix->[$row][$elem] = " " }
         }
     }
