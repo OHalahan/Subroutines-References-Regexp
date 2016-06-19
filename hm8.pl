@@ -4,27 +4,9 @@ use strict;
 use warnings;
 use utf8;
 use Term::ReadKey;
+use Term::ANSIColor;
 
 binmode(STDOUT, ":utf8");
-
-# Create a program which monitors a CPU usage on a remote host(s).
-# Use /proc/stat to calculate the total CPU usage (it should be an aggregated value among all cores).
-# A client on the remote host should gather an information and send it to a local server.
-# Your local server should print it on a terminal as an interactive graph (like nload utility does).
-# An initial size of this graph should depend on the terminal size. Somewhere near the graph an exact value of CPU usage should be printed.
-#
-# Optional server features:
-# an ability to process the information from several clients simultaneously and to switch between graphs;
-# colorized graphs;
-# a usage of unicode characters to make graph pretty.
-#
-# Tips:
-#
-# Create a program that monitors your local CPU usage. After you are satisfied with results, spread a functionality among client and server;
-# These modules may be useful: Term::ANSIColor, Term::ReadKey.
-# http://matrixspace.me/technology/tweaking-cpu-usage-java-linux-part-2/
-# http://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
-# https://en.wikipedia.org/wiki/Box-drawing_character
 
 {
     my ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) = ( 0, 0, 0, 0, 0, 0, 0, 0 );
@@ -34,7 +16,6 @@ binmode(STDOUT, ":utf8");
     sub get_cpu {
         my $cpu = qx(cat /proc/stat | head -1 | awk {'print \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9'});
         ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) = ( split /\s/, $cpu );
-
         $p_f_idle = $p_idle + $p_iowait;
         $f_idle   = $idle + $iowait;
 
@@ -58,55 +39,136 @@ binmode(STDOUT, ":utf8");
 } ### end of work with CPU percents
 
 sub make_text {
+    my ( $wd, $hg, $matrix, $cpu ) = @_;
 
+    for my $row ( 0 .. $hg - 1 ) {
+        for my $elem ( 0 .. $wd - 1 ) {
+            if ( $row == ( $hg - 4 ) && $elem == 5 ) {
+                $matrix->[$row][$elem] = { color => 'bold yellow', text => "Current CPU Usage: " };
+                $matrix->[$row][ $elem + 1 ] = { text => "$cpu" };
+            }
+            elsif ( $row == ( int ( ( $hg ) / 2 ) ) && $elem == 5 ) {
+                $matrix->[$row][ $elem - 4 ] = { color => 'blue', text => "5" };
+                $matrix->[$row][ $elem - 3 ] = { color => 'blue', text => "0" };
+                $matrix->[$row][ $elem - 2 ] = { color => 'blue', text => "%" };
+            }
+        }
+    }
+
+    return 1;
 }
 
 sub make_frame {
-    my ( $hg, $wd, $matrix ) = @_;
-
-    for my $row ( 0 .. $wd - 1 ) {
-        for my $elem ( 0 .. $hg - 1 ) {
-            if (   ( $elem == 5 && $row > 5 )
-                || ( $elem == ( $hg - 5 ) && $row > 5 )
-                || ( $elem == ( $hg - 5 ) && $row < ( $wd ) ) )
-            {
-                $matrix->[$row][$elem] = "\x{2503}";
+    my ( $wd, $hg, $matrix ) = @_;
+    @{$matrix} = ();
+    for my $row ( 0 .. $hg - 1 ) {
+        for my $elem ( 0 .. $wd - 1 ) {
+            # 50%
+            if ( $row == (int ( $hg / 2) ) && ( $elem > 5 && $elem < ( $wd - 5 ) ) ) {
+                $matrix->[$row][$elem] = { color => 'blue', text => "-" };
             }
-
-#elsif ( ( $row == 5 && $elem == 5 ) || $row == ( $wd - 5 ) ) { $matrix->[$row][$elem] = "\x{2501}" }
-            elsif (( $row == 5 && $elem > 5 )
-                || ( $row == ( $wd - 5 ) && $elem > 5 ) )
-            {
-                $matrix->[$row][$elem] = "\x{2501}";
+            # 50%
+            elsif ( $row == ( int ( $hg / 2 ) ) && $elem == 5 ) {
+                $matrix->[$row][$elem] = { text => "\x{252B}" };
             }
-            else { $matrix->[$row][$elem] = " " }
+            elsif (   ( $elem == 5 && ( $row > 5  && $row < ( $hg - 5 ) ) )
+                || ( $elem == ( $wd - 5 ) && ( $row > 5 && $row < ( $hg - 5 ) ) ) )
+            {
+                $matrix->[$row][$elem] = { text => "\x{2503}" };
+            }
+            elsif (( $row == 5 && ( $elem > 5 && $elem < ( $wd - 5 ) ) )
+                || ( $row == ( $hg - 5 ) && ( $elem > 5 && $elem < ( $wd - 5 ) ) ) )
+            {
+                $matrix->[$row][$elem] = { text => "\x{2501}" };
+            }
+            elsif ( $row == 5 && $elem == 5 ) {
+                $matrix->[$row][$elem] = { text => "\x{250F}" };
+            }
+            elsif ( $row == ( $hg - 5 ) && $elem == ( $wd - 5 ) ) {
+                $matrix->[$row][$elem] = { text => "\x{251B}" };
+            }
+            elsif ( $row == ( $hg - 5 ) && $elem == 5 ) {
+                $matrix->[$row][$elem] = { text => "\x{2517}" };
+            }
+            elsif ( $row == 5 && $elem == ( $wd - 5 ) ) {
+                $matrix->[$row][$elem] = { text => "\x{2513}" };
+            }
+            else {
+                $matrix->[$row][$elem] = { text => " " };
+            }
         }
     }
-    return $matrix;
+    return 1;
+}
+
+sub make_graph {
+    my ( $wd, $hg, $matrix, $cpus ) = @_;
+    my @all_rows = ( 0 ) x ($wd - 11 - @{$cpus} );
+    push @all_rows, @{$cpus};
+
+    my $relative_r = 0;
+    my $relative_y = ( int ( ( ( $hg ) * 40 ) / 100 ) );
+    my $relative_g = ( int ( ( ( $hg ) * 50 ) / 100 ) );
+
+    for my $elem ( 6 .. ( $wd - 6 ) ) {
+        if ( $all_rows[ $elem - 6 ] ) {
+            my $value = $all_rows[ $elem - 6 ];
+            my $relative =  ( int ( ( ( $hg - 12 ) * $value ) / 100 ) );
+            my $color;
+
+            for my $row ( ( ( $hg - 6 ) - $relative ) .. ( $hg - 6 ) ) {
+                if ( $row >= $relative_g ) { $color = 'green' }
+                elsif ( $row >= $relative_y && $row < $relative_g ) { $color = 'yellow' }
+                elsif ( $row >= $relative_r && $row < $relative_y ) { $color = 'red' }
+                $matrix->[ $row ][ $elem ] = { color => $color, text => "\x{2588}" };
+            }
+        }
+    }
+
 }
 
 
 sub print_out {
-    my ( $hg, $wd ) = @_;
-    my $matrix;
-    #$matrix->[$_->get_x][$_->get_y] = "*";
-    $matrix = make_frame( $hg, $wd, $matrix );
-
-
+    my ( $matrix ) = @_;
     print "\033[2J";
     for ( @{$matrix} ) {
-        for (@$_) {
-            print "$_";
+        for my $obj (@$_) {
+            if ( $obj->{color} ) {
+                print colored ( "$obj->{text}", $obj->{color} );
+            }
+            else {
+                print "$obj->{text}";
+            }
         }
         print "\n";
     }
 
 }
 
+my ( $p_wchar, $p_hchar ) = ( 0, 0 );
+my @cpus;
+
+
 while (1) {
+    my @matrix;
+
     my ( $wchar, $hchar ) = GetTerminalSize();
-    my $percent = get_cpu;
-    #print "percent: $percent ($wchar, $hchar)\n";
-    print_out( $wchar, $hchar );
-    select(undef, undef, undef, 0.1);
+    my $cpu = get_cpu;
+    push @cpus, $cpu;
+    if ( @cpus > ( $wchar - 11 ) ) {
+        splice @cpus, 0, ( scalar @cpus - ( $wchar - 11 ) );
+    }
+    if ( $wchar < 25 || $hchar < 20 ) {
+        $matrix[0][0] = { color => 'bold red', text => "Terminal size is too small!" };
+    }
+    else {
+        make_frame( $wchar, $hchar, \@matrix );
+        make_text( $wchar, $hchar, \@matrix, $cpu );
+        make_graph( $wchar, $hchar, \@matrix, \@cpus );
+    }
+
+    print_out( \@matrix );
+
+    ( $p_wchar, $p_hchar ) = ( $wchar, $hchar );
+    select(undef, undef, undef, 0.5);
 }
