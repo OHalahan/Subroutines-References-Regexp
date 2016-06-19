@@ -5,47 +5,22 @@ use warnings;
 use utf8;
 use Term::ReadKey;
 use Term::ANSIColor;
+use Socket;
 
 binmode(STDOUT, ":utf8");
 
-{
-    my ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) = ( 0, 0, 0, 0, 0, 0, 0, 0 );
-    my ( $p_user, $p_nice, $p_system, $p_idle, $p_iowait, $p_irq, $p_srq, $p_steal ) = ( 0, 0, 0, 0, 0, 0, 0, 0 );
-    my ( $p_f_idle, $f_idle, $non_idle, $p_non_idle, $p_total, $total, $totald, $idled, $cpu_percent ) = ( 0, 0, 0, 0, 0, 0, 0, 0, 0 );
-
-    sub get_cpu {
-        my $cpu = qx(cat /proc/stat | head -1 | awk {'print \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9'});
-        ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) = ( split /\s/, $cpu );
-        $p_f_idle = $p_idle + $p_iowait;
-        $f_idle   = $idle + $iowait;
-
-        $p_non_idle = $p_user + $p_nice + $p_system + $p_irq + $p_srq + $p_steal;
-        $non_idle   = $user + $nice + $system + $irq + $srq + $steal;
-
-        $p_total = $p_f_idle + $p_non_idle;
-        $total   = $f_idle + $non_idle;
-
-        # differentiate: actual value minus the previous one
-        $totald = $total - $p_total;
-        $idled  = $f_idle - $p_f_idle;
-
-        $cpu_percent = int( ( ($totald - $idled) / $totald ) * 100 );
-
-        ###assigning p_*values:
-        ( $p_user, $p_nice, $p_system, $p_idle, $p_iowait, $p_irq, $p_srq, $p_steal ) = ( $user, $nice, $system, $idle, $iowait, $irq, $srq, $steal ) ;
-
-        return $cpu_percent;
-    }
-} ### end of work with CPU percents
-
 sub make_text {
-    my ( $wd, $hg, $matrix, $cpu ) = @_;
+    my ( $wd, $hg, $matrix, $cpu, $its_a, $its_p ) = @_;
 
     for my $row ( 0 .. $hg - 1 ) {
         for my $elem ( 0 .. $wd - 1 ) {
             if ( $row == ( $hg - 4 ) && $elem == 5 ) {
                 $matrix->[$row][$elem] = { color => 'bold yellow', text => "Current CPU Usage: " };
                 $matrix->[$row][ $elem + 1 ] = { text => "$cpu" };
+            }
+            if ( $row == 4 && $elem == 5 ) {
+                $matrix->[$row][$elem] = { color => 'bold blue', text => "Client "};
+                $matrix->[$row][ $elem + 1 ] = { text => "$its_a:$its_p " };
             }
             elsif ( $row == ( int ( ( $hg ) / 2 ) ) && $elem == 5 ) {
                 $matrix->[$row][ $elem - 4 ] = { color => 'blue', text => "5" };
@@ -145,30 +120,47 @@ sub print_out {
 
 }
 
+####Server###
+my $server_port = '212121';
+# make the socket
+socket(my $host, PF_INET, SOCK_STREAM, getprotobyname('tcp'));
+# so we can restart our server quickly
+setsockopt($host, SOL_SOCKET, SO_REUSEADDR, 1);
+# build up my socket address
+my $my_addr = sockaddr_in($server_port, INADDR_ANY);
+bind($host, $my_addr) or die "Couldn't bind to port $server_port : $!\n";
+# establish a queue for incoming connections
+listen($host, SOMAXCONN) or die "Couldn't listen on port $server_port : $!\n";
+
 my ( $p_wchar, $p_hchar ) = ( 0, 0 );
 my @cpus;
+# accept and process connections
+while ( my $conn_client = accept( my $client, $host ) ) {
+    my ( $its_p, $its_a ) = sockaddr_in($conn_client);
+    $its_a = inet_ntoa($its_a);
+    while (<$client>) {
+        chomp;
+        my @matrix;
+        my ( $wchar, $hchar ) = GetTerminalSize();
+        my $cpu = $_;
+        push @cpus, $cpu;
+        if ( @cpus > ( $wchar - 11 ) ) {
+            splice @cpus, 0, ( scalar @cpus - ( $wchar - 11 ) );
+        }
+        $matrix[0][0] = { color => 'bold red', text => "$_" };
+        if ( $wchar < 25 || $hchar < 20 ) {
+            $matrix[0][0] = { color => 'bold red', text => "Terminal size is too small!" };
+        }
+        else {
+            make_frame( $wchar, $hchar, \@matrix );
+            make_text( $wchar, $hchar, \@matrix, $cpu, $its_a, $its_p );
+            make_graph( $wchar, $hchar, \@matrix, \@cpus );
+        }
 
-
-while (1) {
-    my @matrix;
-
-    my ( $wchar, $hchar ) = GetTerminalSize();
-    my $cpu = get_cpu;
-    push @cpus, $cpu;
-    if ( @cpus > ( $wchar - 11 ) ) {
-        splice @cpus, 0, ( scalar @cpus - ( $wchar - 11 ) );
+        print_out( \@matrix );
     }
-    if ( $wchar < 25 || $hchar < 20 ) {
-        $matrix[0][0] = { color => 'bold red', text => "Terminal size is too small!" };
-    }
-    else {
-        make_frame( $wchar, $hchar, \@matrix );
-        make_text( $wchar, $hchar, \@matrix, $cpu );
-        make_graph( $wchar, $hchar, \@matrix, \@cpus );
-    }
 
-    print_out( \@matrix );
-
-    ( $p_wchar, $p_hchar ) = ( $wchar, $hchar );
-    select(undef, undef, undef, 0.5);
+    print colored ( "Lost connection, waiting for client...\n", 'bold red' );
 }
+
+close($host);
