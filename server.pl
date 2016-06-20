@@ -133,11 +133,14 @@ bind($host, $my_addr) or die "Couldn't bind to port $server_port : $!\n";
 listen($host, SOMAXCONN) or die "Couldn't listen on port $server_port : $!\n";
 
 my ( $p_wchar, $p_hchar ) = ( 0, 0 );
-my @cpus;
+
 # accept and process connections
+print colored ( "Waiting for client...\n", 'bold blue' );
 while ( my $conn_client = accept( my $client, $host ) ) {
     my ( $its_p, $its_a ) = sockaddr_in($conn_client);
     $its_a = inet_ntoa($its_a);
+    my @cpus;
+
     while (<$client>) {
         chomp;
         my @matrix;
